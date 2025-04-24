@@ -1,0 +1,107 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 4839318 */
+  src: url('iconfont.woff2?t=1741866318227') format('woff2'),
+       url('iconfont.woff?t=1741866318227') format('woff'),
+       url('iconfont.ttf?t=1741866318227') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-member:before {
+  content: "\e712";
+}
+
+.icon-barcode:before {
+  content: "\e6c9";
+}
+
+.icon-list:before {
+  content: "\e60a";
+}
+
+.icon-password:before {
+  content: "\e64c";
+}
+
+.icon-user:before {
+  content: "\e78f";
+}
+
+.icon-printer:before {
+  content: "\e68c";
+}
+
+.icon-dot:before {
+  content: "\e66a";
+}
+
+.icon-remove:before {
+  content: "\e70e";
+}
+
+.icon-delete:before {
+  content: "\e74b";
+}
+
+.icon-edit:before {
+  content: "\e639";
+}
+
+.icon-return:before {
+  content: "\e602";
+}
+
+.icon-remark:before {
+  content: "\e749";
+}
+
+.icon-refund:before {
+  content: "\e654";
+}
+
+.icon-cashier:before {
+  content: "\e68f";
+}
+
+.icon-stock:before {
+  content: "\e6b9";
+}
+
+.icon-order:before {
+  content: "\e63f";
+}
+
+.icon-quit:before {
+  content: "\e7ed";
+}
+
+.icon-more:before {
+  content: "\e649";
+}
+
+.icon-money:before {
+  content: "\e632";
+}
+
+.icon-not-paid:before {
+  content: "\ec43";
+}
+
+.icon-swiping-card:before {
+  content: "\e614";
+}
+
+.icon-deduction:before {
+  content: "\e634";
+}
+
+.icon-meal-ticket:before {
+  content: "\e644";
+}
+

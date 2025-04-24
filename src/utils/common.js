@@ -1,0 +1,158 @@
+/**
+ * 计算总价格
+ * @param data [{price: 10, count: 1}]
+ * @returns {*}
+ */
+import moment from "moment";
+
+export const countTotalPrice = (data, property = 'price') => {
+    const totalPrice = data.reduce((pre, next) => {
+        return pre + Number(next[property]) * next.count;
+    }, 0)
+    return totalPrice
+}
+
+/**
+ * 计算属性值总和
+ * @param data [{属性: 值}]
+ * @returns {*}
+ */
+export const countPropertyTotal = (data, property = 'price') => {
+    const countTotal = data.reduce((pre, next) => {
+        return pre + Number(next[property])
+    }, 0)
+    return countTotal
+}
+
+/**
+ * 格式化国际时间
+ * @param data [{属性: 值}]
+ * @returns {*}
+ */
+export const formatIsoTime = (date) => {
+    if (!date) return ''
+    return moment(date).format('YYYY-MM-DDTHH:mm:ssZZ')
+}
+
+/**
+ * 格式化浮点数
+ * @param data [{属性: 值}]
+ * @returns {*}
+ */
+export const formatFloat = (str) => {
+    return Number(str.toString().replace(',', '.'))
+}
+
+/**
+ * 保留小数
+ * @param val
+ * @returns {string|number}
+ */
+export const formatUseFloat = (val, n = 2) => {
+    if (val) {
+        const num = Number(val.toString().replace(',', '.'))
+        const factor = Math.pow(10, n);
+        return Math.round(num * factor) / factor;
+    } else {
+        return 0
+    }
+}
+
+/**
+ * 保留小数使用逗号
+ * @param val
+ * @returns {string|number}
+ */
+export const formatDot = (val, n = 2) => {
+    if (val || val === 0) {
+        return val.toString().replace('.', ',');
+    } else {
+        return ''
+    }
+}
+
+/**
+ * 保留小数使用逗号
+ * @param val
+ * @returns {string|number}
+ */
+export const formatUseDot = (val) => {
+    if (val || val === 0) {
+        let value = Number(val)
+        return value.toFixed(2).replace('.', ',')
+    } else {
+        return ''
+    }
+}
+
+/**
+ * 倒计时
+ * @returns
+ */
+export const getCountDownTime = (date) => {
+    if (!date) return ''
+    // 当前时间
+    const nowTime = new Date().getTime()
+    // 参考时间
+    const referTime = new Date(date).getTime()
+    if ((referTime - nowTime) < 0) {
+        return ''
+    }
+    // 把剩余时间毫秒数转化为秒
+    let times = (referTime - nowTime) / 1000;
+    // 时
+    let hour = Math.floor(times / 60 / 60 % 24)
+    // 分
+    let minutes = Math.floor(times / 60 % 60) + ''
+    minutes = minutes.padStart(2, '0')
+    // 秒
+    let seconds = Math.floor(times % 60) + ''
+    seconds = seconds.padStart(2, '0')
+    if (hour > 0) {
+        hour = hour.toString().padStart(2, '0')
+        return `${hour}:${minutes}:${seconds}`
+    } else {
+        return `${minutes}:${seconds}`
+    }
+}
+
+/**
+ * 防抖
+ * 在连续的操作中，无论进行了多长时间，
+ * 只有某一次的操作后在指定的时间内没有再操作，这一次才被判定有效
+ * @param {*} fn 回调函数
+ * @param {*} delay 间隔时间
+ * @returns
+ */
+export const Debounce = (fn, delay = 300) => {
+    let timer = null;
+    return function () {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+            fn.apply(this, arguments);
+        }, delay);
+    }
+}
+
+/**
+ * 节流
+ * 一定时间内一定执行而且只执行一次。我们通常规定300ms执行一下的话，
+ * 在规定时间内执行了很多次，只有一次是有效的
+ * @param {*} fn 回调函数
+ * @param {*} delay 间隔时长
+ * @returns
+ */
+export const Throttle = (fn, delay = 300) => {
+    let canRun = true;
+    return function () {
+        if (!canRun) return;
+        canRun = false;
+        setTimeout(() => {
+            fn.apply(this, arguments);
+            canRun = true;
+        }, delay);
+    };
+}
+

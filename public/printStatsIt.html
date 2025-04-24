@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>日报表</title>
+    <style>
+        @page{
+            margin: 0.2cm;
+        }
+        div, p, span{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        body{
+            font-size: 14px;
+            font-family: 'Arial Narrow';
+            color: #000000;
+        }
+        .container{
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+        p{
+            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+        .align-c{
+            text-align: center;
+        }
+        .align-l{
+            text-align: left;
+        }
+        .align-r{
+            text-align: right;
+        }
+        .tips{
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .dishes-header{
+            width: 100%;
+            font-size: 14px;
+        }
+        .dishes-row{
+            width: 100%;
+        }
+        .dishes-row .name{
+            width: calc(100% - 26pt - 48pt);
+            display: inline-block;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+        .dishes-row .iva{
+            width: 26pt;
+            display: inline-block;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+        .dishes-row .price{
+            width: 48pt;
+            display: inline-block;
+            word-wrap: break-word;
+            vertical-align: top;
+            text-align: right;
+        }
+        .line{
+            height: 1px;
+            border-bottom: 1px dashed #000;
+            margin-top: 4px;
+        }
+        .tax-row .price{
+            width: 30%;
+            display: inline-block;
+            vertical-align: top;
+        }
+        .tax-row .iva{
+            width: 20%;
+            display: inline-block;
+            vertical-align: top;
+            text-align: center;
+        }
+        .row{
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .dot{
+            height: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .vital{
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body id='bd'>
+</body>
+<script>
+    //引入ipcRenderer对象
+    const {ipcRenderer} = require('electron')
+    
+    //监听渲染线程传过来的webview-print-render事件 printTemplate
+    ipcRenderer.on('webview-print-render', (event, data) => {
+        let html = '';
+        html = '<div class="container">'+
+                '<p class="align-c vital">'+ data.shopName + '</p>'
+                if (data.type === 'total') {
+                    html += '<p class="align-c vital">Total</p>'
+                } else {
+                    html += '<p class="align-c vital">' + data.username + ' --- ' + data.number + '</p>'
+                }
+        html += '<p class="align-c">' + data.startedAt + ' - ' + data.endedAt + '</p>'
+        html += '<p class="line"></p>';
+        // 支付方式
+        html += '<div class="pay">'
+        for (let i = 0; i < data.paymodes.length; i++) {
+            if (data.paymodes[i].paymode === 101) {
+                html += '<p class="row">' +
+                        '<span>CONTANTI</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            } else if (data.paymodes[i].paymode === 102) {
+                html += '<p class="row">' +
+                        '<span>CARTA</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            } else if (data.paymodes[i].paymode === 106) {
+                html += '<p class="row">' +
+                        '<span>BIZUM</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            } else if (data.paymodes[i].paymode === 103) {
+                html += '<p class="row">' +
+                        '<span>TICKET</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            } else if (data.paymodes[i].paymode === 105) {
+                html += '<p class="row">' +
+                        '<span>BUONO</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            } else if (data.paymodes[i].paymode === 104) {
+                html += '<p class="row">' +
+                        '<span>NO PAGATO</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            } else if (data.paymodes[i].paymode === 999) {
+                html += '<p class="row">' +
+                        '<span>RESTO</span>'+
+                        '<span>' + data.paymodes[i].amount.toFixed(2).replace('.', ',') + '</span>'+
+                        '</p>'
+            }
+        }
+        html += '</div>'
+        html += '<p class="line"></p>';
+        //总计 SUB-TATALE
+        html += '<p class="row">'+
+                '<span>SUB - TOTALE</span>'+
+                '<span>' + data.subTotal.toFixed(2).replace('.', ',') + '</span>'+
+                '</p>';
+        html += '<p class="line"></p>';
+        html += '<p class="row">'+
+                '<span>SCONTRINO DI RIMBORSO</span>'+
+                '<span>' + data.refundOrderCount.toFixed(2).replace('.', ',') + '</span>'+
+                '</p>';
+        html += '<p class="row">'+
+                '<span>IMPORTO DEL RIMBORSO</span>'+
+                '<span>' + data.refundOrderAmount.toFixed(2).replace('.', ',') + '</span>'+
+                '</p>';
+        html += '<p class="line"></p>';
+        //时间
+        html += '<p class="align-c">' + data.time + '</p>';
+        html += '</div>';
+        // //生成。。。
+        html += '<p class="dot">.</p>';
+        html += '<p class="dot">.</p>';
+        html += '<p class="dot">.</p>';
+        html += '</div>';
+        document.getElementById('bd').innerHTML = html;
+        //当内容插入到页面后，通过ipcRenderer对象的sendToHost方法和渲染线程通讯，告诉渲染线程打印的内容已经准备完毕，请开始打印操作
+        ipcRenderer.sendToHost('webview-print-do');
+    });
+</script>
+</html>

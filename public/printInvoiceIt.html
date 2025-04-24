@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>税票 - 意大利</title>
+    <style>
+        @page{
+            margin: 0.2cm;
+        }
+        div, p, span{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        i{
+            font-style: normal;
+        }
+        body{
+            font-size: 14px;
+            font-family: 'Arial Narrow';
+            color: #000000;
+        }
+        .container{
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+        p{
+            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+        .align-c{
+            text-align: center;
+        }
+        .align-l{
+            text-align: left;
+        }
+        .align-r{
+            text-align: right;
+        }
+        .tips{
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .line{
+            height: 1px;
+            border-bottom: 1px dashed #000;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        .dishes-header{
+            width: 100%;
+            font-size: 14px;
+        }
+        .dishes{
+            width: 100%;
+        }
+        .dishes .name{
+            font-size: 14px;
+            line-height: 18px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            -webkit-line-clamp: 2;
+            text-overflow: ellipsis;
+        }
+        .dishes .desc {
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
+        }
+        .dishes .code{
+            width: 40%;
+            flex-shrink: 0;
+        }
+        .dishes .count{
+            width: 15%;
+            flex-shrink: 0;
+        }
+        .dishes .price{
+            width: 25%;
+            flex-shrink: 0;
+        }
+        .dishes .price del{
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            font-size: 13px;
+        }
+        .dishes .price i{
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+        }
+        .dishes .total{
+            width: 20%;
+            flex-shrink: 0;
+        }
+        .tax-row {
+            width: 100%;
+            display: flex;
+            align-items: flex-start;
+        }
+        .tax-row .price{
+            width: 30%;
+            flex-shrink: 0;
+        }
+        .tax-row .iva{
+            width: 20%;
+            flex-shrink: 0;
+        }
+        .row{
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .dot{
+            height: 10px;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body id='bd'>
+</body>
+<script>
+    //引入ipcRenderer对象
+    const {ipcRenderer} = require('electron')
+    function randomWord(randomFlag, min, max){
+        let str = "",
+                range = min,
+                arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+        
+        // 随机产生
+        if(randomFlag){
+            range = Math.round(Math.random() * (max-min)) + min;
+        }
+        for(let i=0; i<range; i++){
+            pos = Math.round(Math.random() * (arr.length-1));
+            str += arr[pos];
+        }
+        return str;
+    }
+    
+    //监听渲染线程传过来的 webview-print-render事件 printTemplate
+    ipcRenderer.on('webview-print-render', (event, data) => {
+        let html = '';
+        html = '<div class="container">'+//商家税票信息
+                '<p class="align-c tips">'+ data.name + '</p>'+
+                '<p class="align-c tips">' + data.company + '</p>' +
+                '<p class="align-c">' + data.address + '</p>'+
+                '<p class="align-c">' + data.pcg + '</p>'+
+                '<p class="align-c">' + data.country + '</p>'
+        // '<p class="align-c">NIF ' + data.vatNumber + '</p>'+
+        // '<p class="align-c">CIF ' + data.taxCode + '</p>'
+        
+        // html += '<p class="row">'+
+        //         '<span>FACTURA N.' + data.snf +' </span>'+
+        //         '<span>FECHA ' + data.time + '</span>'+
+        //         '</p>'
+        
+        html += '<p class="line"></p>';
+        // 消费者税票信息
+        html += '<p class="align-c tips">'+ data.invoiceData.name + '</p>'+
+                '<p class="align-c">' + data.invoiceData.address + '</p>'+
+                '<p class="align-c">' + data.invoiceData.zipcode + ' '  + data.invoiceData.city + ' ' + data.invoiceData.province + '</p>' +
+                '<p class="align-c">' + data.invoiceData.country + '</p>';
+        if (data.invoiceData.vatNumber) {
+            html += '<p class="align-c">' + data.invoiceData.vatNumber + '</p>';
+        }
+        if (data.invoiceData.taxCode) {
+            html += '<p class="align-c">' + data.invoiceData.taxCode + '</p>';
+        }
+        html += '<p class="line"></p>';
+        
+        html += '<p class="align-c tips">FATTURA SEMPLIFICATA</p>';
+        html += '<p class="row">'+
+                '<span>Data</span>'+
+                '<span>' + data.time + '</span>'+
+                '</p>';
+        html += '<p>Servito da:' + data.operatorName + '</p>';
+        html += '<p class="line"></p>';
+        // 菜品信息
+        html += '<div class="dishes">' +
+                '<p class="dishes-header desc"> ' +
+                '<span class="code align-l">DESCRIZIONE</span>' +
+                '<span class="count align-c">Q.TÀ</span>' +
+                '<span class="price align-c">PREZZO</span>' +
+                '<span class="total align-r">TOTALE</span>' +
+                '</p>';
+        html += '<p class="line"></p>';
+        for(let i = 0; i < data.items.length; i++) {
+            html += '<div class="dishes-row">' +
+                    '<p class="name">' + data.items[i].name + '</p>' +
+                    '<p class="desc">'
+            if (data.items[i].code) {
+                html += '<span class="code align-l">' + data.items[i].code + '</span>'
+            } else {
+                html += '<span class="code align-l"></span>'
+            }
+            html += '<span  class="count align-c">' + data.items[i].count + '</span>'
+            if (data.items[i].originalPrice !== data.items[i].finalPrice) {
+                html += '<span class="price align-c">' +
+                        '<del>' + data.items[i].originalPrice.toFixed(2).replace('.', ',') + '€</del>' +
+                        '<i>' + data.items[i].finalPrice.toFixed(2).replace('.', ',') + '€</i>' +
+                        '</span>'
+            } else {
+                html += '<span class="price align-c">' + data.items[i].finalPrice.toFixed(2).replace('.', ',') + '€</span>'
+            }
+            html += '<span class="total align-r">' + data.items[i].finalAmount.toFixed(2).replace('.', ',') + '€</span>' +
+                    '</p>' +
+                    '</div>';
+        }
+        html += '</div>';
+        html += '<p class="line"></p>';
+        //总计 SUB-TATALE
+        html += '<p class="row">'+
+                '<span>TOTALE</span>'+
+                '<span>' + data.itemTotalAmount.toFixed(2).replace('.', ',') + '€</span>'+
+                '</p>';
+        // 商品折扣
+        if(data.itemDiscountAmount > 0){
+            html += '<p class="row">'+
+                    '<span>OFFERTE DI PRODOTTI</span>'+
+                    '<span>-' + data.itemDiscountAmount.toFixed(2).replace('.', ',') + '€</span>'+
+                    '</p>';
+        } else if (data.itemDiscountAmount < 0) {
+            html += '<p class="row">'+
+                    '<span>OFFERTE DI PRODOTTI</span>'+
+                    '<span>+' + Math.abs(data.itemDiscountAmount).toFixed(2).replace('.', ',') + '€</span>'+
+                    '</p>';
+        }
+        // 订单折扣
+        if(data.orderDiscountAmount > 0){
+            html += '<p class="row">'+
+                    '<span>SCONTO SULL\'ORDINE</span>'+
+                    '<span>-' + data.orderDiscountAmount.toFixed(2).replace('.', ',') + '€</span>'+
+                    '</p>';
+        } else if (data.orderDiscountAmount < 0) {
+            html += '<p class="row">'+
+                    '<span>SCONTO SULL\'ORDINE</span>'+
+                    '<span>+' + Math.abs(data.orderDiscountAmount).toFixed(2).replace('.', ',') + '€</span>'+
+                    '</p>';
+        }
+        // 合计
+        html += '<p class="row">'+
+                '<span>TOTALE (IVA incl.)</span>'+
+                '<span>' + data.finalAmount.toFixed(2).replace('.', ',') + '€</span>'+
+                '</p>';
+        html += '<p class="line"></p>';
+        // 支付方式
+        html += '<div class="pay">'
+        for (let i = 0; i < data.payments.length; i++) {
+            if (data.payments[i].paymode === 101) {
+                html += '<p class="row">' +
+                        '<span>Contanti</span>'+
+                        '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            } else if (data.payments[i].paymode === 102) {
+                html += '<p class="row">' +
+                        '<span>Carta</span>'+
+                        '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            } else if (data.payments[i].paymode === 106) {
+                html += '<p class="row">' +
+                        '<span>BIZUM</span>'+
+                        '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            } else if (data.payments[i].paymode === 103) {
+                html += '<p class="row">' +
+                        '<span>Buono pasto</span>'+
+                        '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            } else if (data.payments[i].paymode === 105) {
+                html += '<p class="row">' +
+                        '<span>Buono sconto</span>'+
+                        '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            } else if (data.payments[i].paymode === 104) {
+                html += '<p class="row">' +
+                        '<span>NON PAGATO</span>'+
+                        '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            } else if (data.payments[i].paymode === 0) {
+                html += '<p class="row">' +
+                        '<span>Dare Il Resto</span>'+
+                        '<span>-' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
+                        '</p>'
+            }
+        }
+        html += '</div>'
+        html += '<p class="line"></p>';
+        //增值税
+        html += '<div class="tax">' +
+                '<p class="tax-row">' +
+                '<span class="price align-l">BASE IMPONIBILE</span>' +
+                '<span class="iva align-c">IVA</span>' +
+                '<span class="iva align-c">IMPOSTA</span>' +
+                '<span class="price align-r">IMPORTO</span>' +
+                '</p>'
+        for (let i = 0; i < data.taxList.length; i++) {
+            html += '<p class="tax-row">' +
+                    '<span class="price align-l">'+ data.taxList[i].finalNetAmount.toFixed(2).replace('.', ',') +'€</span>' +
+                    '<span class="iva align-c">' + data.taxList[i].taxRate + '%</span>' +
+                    '<span class="iva align-c">' + data.taxList[i].vatAmount.toFixed(2).replace('.', ',') + '€</span>' +
+                    '<span class="price align-r">' + data.taxList[i].settleAmount.toFixed(2).replace('.', ',') + '€</span>' +
+                    '</p>'
+        }
+        html += '</div>'
+        html += '<p class="line"></p>';
+        // 会员信息
+        if (data.member) {
+            html += '<p class="row">'+
+                    '<span>Cliente CL.</span>'+
+                    '<span>' + data.member.number + '</span>'+
+                    '</p>';
+            // html += '<p class="row">'+
+            //         '<span>Punti accumulati scontrino</span>'+
+            //         '<span>' + data.member.totalPoints.toFixed(2).replace('.', ',') + '</span>'+
+            //         '</p>';
+            html += '<p class="row">'+
+                    '<span>Punti accumulati totali</span>'+
+                    '<span>' + data.member.totalPoints.toFixed(2).replace('.', ',') + '</span>'+
+                    '</p>';
+            html += '<p class="line"></p>';
+        }
+        // //生成。。。
+        html += '<p class="dot">.</p>';
+        html += '<p class="dot">.</p>';
+        html += '<p class="dot">.</p>';
+        html += '</div>';
+        document.getElementById('bd').innerHTML = html;
+        //当内容插入到页面后，通过ipcRenderer对象的sendToHost方法和渲染线程通讯，告诉渲染线程打印的内容已经准备完毕，请开始打印操作
+        ipcRenderer.sendToHost('webview-print-do');
+    });
+</script>
+</html>
