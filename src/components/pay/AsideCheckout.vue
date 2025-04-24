@@ -285,6 +285,7 @@ export default {
             isFirstCash: true,
             isFirstCard: true,
             isFirstBizum: true,
+            isAuto: true
         };
     },
     // 计算属性
@@ -325,14 +326,14 @@ export default {
             if (!this.orderData) return;
             this.finalAmount = this.orderData.finalAmount
             this.copeAmount = formatDot(this.orderData.finalAmount)
-            this.cashAmount = ''
+            this.cashAmount = this.copeAmount
             this.cardAmount = ''
             this.bizumAmount = ''
             this.ticketAmount = ''
             this.voucherBarcode = ''
             this.voucherList = []
             this.unpaidAmount = ''
-            this.roundingAmount = this.finalAmount
+            this.roundingAmount = 0
             this.lotteryCode = ''
             this.paymentType = 'cash'
             this.$nextTick(() => {
@@ -1145,6 +1146,10 @@ export default {
         
         // 调整支付焦点
         tooglePaymentFocus (type) {
+            if (this.isFirstCash && this.isAuto) {
+                this.cashAmount = ''
+            }
+            this.isAuto = false
             switch (type) {
                 case 'cash':
                     this.paymentType = type
