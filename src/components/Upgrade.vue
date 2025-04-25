@@ -70,7 +70,8 @@ export default {
                     if (res.code === 20000) {
                         if (!res.data) return;
                         if (!res.data.descFileUrl) return;
-                        this.upgradeAddress = res.data.descFileUrl.slice(0, res.data.descFileUrl.lastIndexOf('/') + 1)
+                        const systemBaseUrl = localStorage.getItem("systemBaseUrl")
+                        this.upgradeAddress = `${systemBaseUrl}/api/v1/system/desktop/download/`
                         if (res.data.forcible && b) {
                             this.upgradeStart()
                         } else {
@@ -93,7 +94,6 @@ export default {
         upgradeStart () {
             this.upgradeHint = false
             this.currentRate = 0
-            console.log(this.upgradeAddress)
             // 向主进程发送开始更新
             ipcRenderer.send('upgrade-start', this.upgradeAddress);
             // 监听主进程获取版本信息
@@ -139,7 +139,7 @@ export default {
     // 挂载完成
     mounted() {
         // 开启用餐信息定时器
-        // this.startTimer()
+        this.startTimer()
     },
     // 销毁之前
     beforeDestroy() {
