@@ -411,7 +411,7 @@ export default {
         countryChange (val) {
             this.formData.province = ''
             this.provinceOptions = []
-            const currentCountry = this.countryOptions.find(item => item.name === val)
+            const currentCountry = this.countryOptions.find(item => item.code === val)
             if (currentCountry === undefined) return;
             this.getProvinceList(currentCountry.id)
         },

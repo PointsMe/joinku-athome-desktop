@@ -161,9 +161,17 @@
         if (data.printType === 'preprint') {
             html += '<p class="align-c tips">MANAGEMENT DOCUMENT</p>';
         } else if (data.printType === 'invoice') {
-            html += '<p class="align-c tips">SIMPLIFIED INVOICE</p>';
-        } else if (data.printType === 'tax') {
             html += '<p class="align-c tips">INVOICE</p>';
+            html += '<p class="row">'+
+                    '<span>Invoice No.</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
+        } else if (data.printType === 'tax') {
+            html += '<p class="align-c tips">SIMPLIFIED INVOICE</p>';
+            html += '<p class="row">'+
+                    '<span>Document No.</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
         }
         html += '<p class="row">'+
                 '<span>Date</span>'+

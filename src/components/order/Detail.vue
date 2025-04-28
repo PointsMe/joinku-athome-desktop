@@ -183,7 +183,7 @@
             <div class="handle-right">
                 <el-button
                     type="info"
-                    @click="prePressPrint('preprint')">
+                    @click="printBillHandle()">
                     {{$t('printBill')}}
                 </el-button>
             </div>
@@ -222,6 +222,7 @@ export default {
         return {
             dialogVisible: false,
             receipt: 100,
+            receiptNumber: '',
             productList: [],
             number: '',
             createdAt: '',
@@ -271,6 +272,7 @@ export default {
             queryOrderDetail(params).then(res => {
                 if (res.code === 20000) {
                     this.receipt = res.data.receipt
+                    this.receiptNumber = res.data.receiptNumber || ''
                     const items = res.data.items || []
                     this.productList = items.map(item => {
                         let maxCount = item.finalCount - item.refundCount
@@ -310,6 +312,59 @@ export default {
                 this.$message.error(error);
             })
         },
+        // 更新收据
+        updateReceipt () {
+            return new Promise((resolve, reject) => {
+                let params = {
+                    id: this.itemId
+                }
+                queryOrderDetail(params).then(res => {
+                    if (res.code === 20000) {
+                        this.receipt = res.data.receipt
+                        this.receiptNumber = res.data.receiptNumber || ''
+                        const items = res.data.items || []
+                        this.productList = items.map(item => {
+                            let maxCount = item.finalCount - item.refundCount
+                            let maxAmount = item.settleAmount - item.refundAmount
+                            let disabled = item.refundCount >= item.finalCount
+                            return {
+                                ...item,
+                                maxCount,
+                                disabled,
+                                count: maxCount,
+                                maxAmount,
+                                amount: item.settleAmount - item.refundAmount,
+                            }
+                        })
+                        this.number = res.data.number
+                        this.createdAt = res.data.createdAt
+                        this.member = res.data.member
+                        this.operatorName = res.data.operator ? res.data.operator.username : ''
+                        this.itemTotalAmount = res.data.itemTotalAmount
+                        this.itemDiscountAmount = res.data.itemDiscountAmount
+                        this.orderDiscountAmount = res.data.orderDiscountAmount
+                        this.totalDiscountAmount = res.data.totalDiscountAmount
+                        this.finalAmount = res.data.finalAmount
+                        this.remark = res.data.remark
+                        this.payments = res.data.payments || []
+                        this.paidAmount = res.data.paidAmount
+                        this.enablePreprint = res.data.cashierSetting.enablePreprint
+                        this.enableAliasPrint = res.data.cashierSetting.enableAliasPrint
+                        resolve()
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: res.msg,
+                            type: 'error'
+                        })
+                        reject()
+                    }
+                }).catch(error => {
+                    this.$message.error(error);
+                    reject()
+                })
+            });
+        },
         
         // 是否可勾选
         rowSelectable (row, index) {
@@ -319,7 +374,7 @@ export default {
         // 校验数量
         checkCount (row) {
             if (row.disabled) return true
-            if (!validateInteger(row.count)) return false
+            if (!validateFloat(row.count)) return false
             return Number(row.count) <= row.maxCount;
         },
         // 校验金额
@@ -358,6 +413,8 @@ export default {
                     this.getDetail()
                     // 生成条码
                     this.createBarcode(res.data.id, res.data.amount)
+                    // 更新订单
+                    this.updateOrder()
                 } else {
                     this.$message({
                         showClose: true,
@@ -374,7 +431,7 @@ export default {
         // 校验退款项
         checkRefundItem () {
             return this.multipleSelection.every((item, index, array) => {
-                return validateInteger(item.count) && Number(item.count) <= item.maxCount && validateFloat(item.amount) && formatFloat(item.amount) <= item.maxAmount
+                return validateFloat(item.count) && Number(item.count) <= item.maxCount && validateFloat(item.amount) && formatFloat(item.amount) <= item.maxAmount
             });
         },
         // 生成条形码
@@ -419,6 +476,109 @@ export default {
                 }
             })
         },
+    
+        // 打印账单
+        printBillHandle () {
+            if (this.receipt === 100) {
+                this.prePressPrint('preprint')
+            } else if (this.receipt === 101) {
+                this.prePressPrint('tax')
+            } else if (this.receipt === 102) {
+                this.prePressPrint('invoice')
+            }
+        },
+    
+        // 预打
+        prePressPrint (printType = 'preprint') {
+            let items = this.productList.map(item => {
+                return {
+                    ...item,
+                    count: item.finalCount
+                }
+            })
+            let taxObj = this.taxGroupBy(items)
+            let taxList = []
+            let taxAmountList = []
+            for (let key in taxObj) {
+                let settleAmount = taxObj[key].reduce((pre, next) => {
+                    return pre + next.settleAmount
+                }, 0)
+                let vatAmount = taxObj[key].reduce((pre, next) => {
+                    return pre + next.vatAmount
+                }, 0)
+                taxAmountList.push(vatAmount)
+                taxList.push({
+                    taxRate: Number(key),
+                    finalNetAmount:  settleAmount - vatAmount,
+                    vatAmount: vatAmount,
+                    settleAmount: settleAmount,
+                })
+            }
+            let taxAmount = taxAmountList.reduce((x, y) => {
+                return x + y;
+            })
+            let snf = localStorage.getItem('snf').padStart(4, '0')
+            let printData = {
+                printType,
+                receiptNumber: this.receiptNumber,
+                name: this.shopInfo.name,
+                company: this.shopInfo.companyName || '',
+                address: this.shopInfo.address,
+                pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
+                country: this.shopInfo.countryName,
+                vatNumber: this.shopInfo.vatNumber,
+                taxCode: this.shopInfo.taxCode,
+                operatorName: this.userName,
+                items: this.productList,
+                taxList,
+                taxAmount,
+                payments: this.payments,
+                itemTotalAmount: this.itemTotalAmount,
+                itemDiscountAmount: this.itemDiscountAmount,
+                orderDiscountAmount: this.orderDiscountAmount,
+                finalAmount: this.finalAmount,
+                time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
+                snf,
+                member: this.member
+            }
+            queryPrinterList().then(res => {
+                if (res.length !== 0) {
+                    res.forEach((item) => {
+                        if (item.isDefault) {
+                            this.savePrinterName(item.name)
+                        }
+                    });
+                    if (this.shopInfo.countryCode === 'IT') {
+                        let webview = document.querySelector('#preprintIt')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ZH') {
+                        let webview = document.querySelector('#preprintZh')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'EN') {
+                        let webview = document.querySelector('#preprintEn')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'FR') {
+                        let webview = document.querySelector('#preprintFr')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'DE') {
+                        let webview = document.querySelector('#preprintDe')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ES' || this.shopInfo.countryCode === 'CA') {
+                        let webview = document.querySelector('#preprintEs')
+                        webview.send('webview-print-render', printData)
+                    } else {
+                        let webview = document.querySelector('#preprintEn')
+                        webview.send('webview-print-render', printData)
+                    }
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: this.$t('notPrinter'),
+                        type: 'error'
+                    })
+                }
+            })
+        },
         
         // 税票
         taxHandle () {
@@ -429,13 +589,16 @@ export default {
             this.taxDisabled = true
             updateOrderReceipt(params).then(res => {
                 if (res.code === 20000) {
-                    if (this.shopInfo.countryCode === 'ES') {
-                        this.prePressPrint('tax')
-                    } else {
-                        this.taxPrint();
-                    }
+                    this.updateReceipt().then(() => {
+                        if (this.shopInfo.countryCode === 'ES') {
+                            // 预打
+                            this.prePressPrint('tax')
+                        } else {
+                            this.taxPrint();
+                        }
+                    })
                     // 更新订单
-                    this.getDetail()
+                    this.updateOrder()
                 } else {
                     this.$message({
                         showClose: true,
@@ -537,13 +700,16 @@ export default {
             }
             updateOrderReceipt(params).then(res => {
                 if (res.code === 20000) {
-                    if (this.enablePreprint) {
-                        this.prePressPrint('invoice')
-                    } else {
-                        this.invoicePrint(invoiceBuyer);
-                    }
+                    this.updateReceipt().then(() => {
+                        if (this.enablePreprint) {
+                            // 预打
+                            this.prePressPrint('invoice')
+                        } else {
+                            this.invoicePrint(invoiceBuyer);
+                        }
+                    })
                     // 更新订单
-                    this.getDetail()
+                    this.updateOrder()
                 } else {
                     this.$message({
                         showClose: true,
@@ -592,6 +758,7 @@ export default {
             })
             let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
+                receiptNumber: this.receiptNumber,
                 name: this.shopInfo.name,
                 company: this.shopInfo.companyName,
                 address: this.shopInfo.address,
@@ -652,96 +819,6 @@ export default {
             })
         },
         
-        // 打印账单
-        prePressPrint (printType = 'preprint') {
-            let items = this.productList.map(item => {
-                return {
-                    ...item,
-                    count: item.finalCount
-                }
-            })
-            let taxObj = this.taxGroupBy(items)
-            let taxList = []
-            let taxAmountList = []
-            for (let key in taxObj) {
-                let settleAmount = taxObj[key].reduce((pre, next) => {
-                    return pre + next.settleAmount
-                }, 0)
-                let vatAmount = taxObj[key].reduce((pre, next) => {
-                    return pre + next.vatAmount
-                }, 0)
-                taxAmountList.push(vatAmount)
-                taxList.push({
-                    taxRate: Number(key),
-                    finalNetAmount:  settleAmount - vatAmount,
-                    vatAmount: vatAmount,
-                    settleAmount: settleAmount,
-                })
-            }
-            let taxAmount = taxAmountList.reduce((x, y) => {
-                return x + y;
-            })
-            let snf = localStorage.getItem('snf').padStart(4, '0')
-            let printData = {
-                printType,
-                name: this.shopInfo.name,
-                company: this.shopInfo.companyName,
-                address: this.shopInfo.address,
-                pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
-                country: this.shopInfo.countryName,
-                vatNumber: this.shopInfo.vatNumber,
-                taxCode: this.shopInfo.taxCode,
-                operatorName: this.userName,
-                items: this.productList,
-                taxList,
-                taxAmount,
-                payments: this.payments,
-                itemTotalAmount: this.itemTotalAmount,
-                itemDiscountAmount: this.itemDiscountAmount,
-                orderDiscountAmount: this.orderDiscountAmount,
-                finalAmount: this.finalAmount,
-                time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
-                snf,
-                member: this.member
-            }
-            queryPrinterList().then(res => {
-                if (res.length !== 0) {
-                    res.forEach((item) => {
-                        if (item.isDefault) {
-                            this.savePrinterName(item.name)
-                        }
-                    });
-                    if (this.shopInfo.countryCode === 'IT') {
-                        let webview = document.querySelector('#preprintIt')
-                        webview.send('webview-print-render', printData)
-                    } else if (this.shopInfo.countryCode === 'ZH') {
-                        let webview = document.querySelector('#preprintZh')
-                        webview.send('webview-print-render', printData)
-                    } else if (this.shopInfo.countryCode === 'EN') {
-                        let webview = document.querySelector('#preprintEn')
-                        webview.send('webview-print-render', printData)
-                    } else if (this.shopInfo.countryCode === 'FR') {
-                        let webview = document.querySelector('#preprintFr')
-                        webview.send('webview-print-render', printData)
-                    } else if (this.shopInfo.countryCode === 'DE') {
-                        let webview = document.querySelector('#preprintDe')
-                        webview.send('webview-print-render', printData)
-                    } else if (this.shopInfo.countryCode === 'ES' || this.shopInfo.countryCode === 'CA') {
-                        let webview = document.querySelector('#preprintEs')
-                        webview.send('webview-print-render', printData)
-                    } else {
-                        let webview = document.querySelector('#preprintEn')
-                        webview.send('webview-print-render', printData)
-                    }
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: this.$t('notPrinter'),
-                        type: 'error'
-                    })
-                }
-            })
-        },
         // 分组
         taxGroupBy(arr) {
             let list = arr.sort((a, b) => b.taxRate - a.taxRate);
@@ -753,6 +830,11 @@ export default {
                 acc[groupKey].push(item);
                 return acc;
             }, {});
+        },
+        
+        // 更新订单
+        updateOrder () {
+            this.$emit('parent-update')
         },
         // 关闭弹窗
         dialogClose () {

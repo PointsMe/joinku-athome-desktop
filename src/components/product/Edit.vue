@@ -111,23 +111,23 @@ export default {
     data() {
         const validatorInteger = (rule, value, callback) => {
             if (!value && value !== 0) {
-                return callback(new Error(this.$t('common.qsrnr')));
+                return callback(new Error(this.$t('inpContentHint')));
             }
             const reg = /^(0|[1-9]\d*)$/
             if (reg.test(value)) {
                 callback()
             } else {
-                callback(new Error(this.$t('common.srbhf')))
+                callback(new Error(this.$t('inpNotRule')))
             }
         };
         let validatorFloat = (rule, value, callback) => {
             if (!value && value !== 0) {
-                return callback(new Error(this.$t('qsrnr')));
+                return callback(new Error(this.$t('inpContentHint')));
             }
             if (validateZeroFloat(value)) {
                 callback()
             } else {
-                callback(new Error(this.$t('srbhf')))
+                callback(new Error(this.$t('inpNotRule')))
             }
         };
         const validatorPrice = (rule, value, callback) => {

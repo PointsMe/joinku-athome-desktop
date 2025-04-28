@@ -1,6 +1,6 @@
 {
   "name": "joinku-athome-desktop",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "scripts": {
     "dev": "vue-cli-service electron:serve",

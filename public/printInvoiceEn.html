@@ -177,7 +177,11 @@
         }
         html += '<p class="line"></p>';
         
-        html += '<p class="align-c tips">SIMPLIFIED INVOICE</p>';
+        html += '<p class="align-c tips">INVOICE</p>';
+        html += '<p class="row">'+
+                '<span>Invoice No.</span>'+
+                '<span>' + data.receiptNumber + '</span>'+
+                '</p>';
         html += '<p class="row">'+
                 '<span>Date</span>'+
                 '<span>' + data.time + '</span>'+

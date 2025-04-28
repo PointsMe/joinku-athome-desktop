@@ -161,9 +161,17 @@
         if (data.printType === 'preprint') {
             html += '<p class="align-c tips">VERWALTUNGSDOKUMENT</p>';
         } else if (data.printType === 'invoice') {
-            html += '<p class="align-c tips">VEREINFACHTE RECHNUNG</p>';
-        } else if (data.printType === 'tax') {
             html += '<p class="align-c tips">RECHNUNG</p>';
+            html += '<p class="row">'+
+                    '<span>Rechnungs-Nr.</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
+        } else if (data.printType === 'tax') {
+            html += '<p class="align-c tips">VEREINFACHTE RECHNUNG</p>';
+            html += '<p class="row">'+
+                    '<span>Dokument-Nr.</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
         }
         html += '<p class="row">'+
                 '<span>Datum</span>'+

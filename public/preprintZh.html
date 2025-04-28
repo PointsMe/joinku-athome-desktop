@@ -162,8 +162,16 @@
             html += '<p class="align-c tips">预打单</p>';
         } else if (data.printType === 'invoice') {
             html += '<p class="align-c tips">发票</p>';
+            html += '<p class="row">'+
+                    '<span>发票号码</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
         } else if (data.printType === 'tax') {
             html += '<p class="align-c tips">税票</p>';
+            html += '<p class="row">'+
+                    '<span>税票号码</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
         }
         html += '<p class="row">'+
                 '<span>打印时间</span>'+

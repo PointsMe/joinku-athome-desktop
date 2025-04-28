@@ -228,7 +228,7 @@ export default {
             }
         },
         // 获取当前会话
-        getCurrentSession () {
+        getCurrentSession (b = false) {
             queryCurrentSession().then(res => {
                 if (Number(res.code) === 20000) {
                     this.productList = res.data.items || []
@@ -268,7 +268,7 @@ export default {
                         this.$refs.asideRef.productHandleType = ''
                         // 扫码框得到焦点
                         this.$refs.footerRef.scanCodeFocus()
-                    } else if (this.pageType === 'checkout') {
+                    } else if (this.pageType === 'checkout' && !b) {
                         this.$nextTick(() => {
                             this.$refs.asideRef.initPayAmount()
                         })
@@ -312,13 +312,6 @@ export default {
         // 双击行
         dblclickCount (row) {
             if (this.pageType !== 'product') return;
-            // this.itemIndex = this.productList.indexOf(row);
-            // this.itemId = row.id
-            // this.itemCount = row.count
-            // this.itemPrice = row.finalPrice
-            // this.itemRemark = row.remark || ''
-            // this.itemImage = row.image
-            // this.ifCodeless = row.codeless
             // 改数量
             this.$refs.asideRef.productHandleType = 100
             this.$nextTick(() => {

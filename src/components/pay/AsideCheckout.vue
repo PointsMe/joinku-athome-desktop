@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div class="bill-item" v-if="orderData && orderData.roundingDiscount">
-                    <span class="label">{{ $t('productDiscount') }}</span>
+                    <span class="label">{{ $t('rounding') }}</span>
                     <span class="value discount">-{{ orderData.roundingDiscount.amount | filteFloat }}</span>
                 </div>
                 <div class="bill-item" v-if="orderData && orderData.pointsDiscount && orderData.pointsDiscount.deductAmount > 0">
@@ -96,7 +96,6 @@
                                 ref="voucherRef"
                                 @focus="paymentFocus('voucher')"
                                 @input.native="voucherDebounce"
-                                @keydown.native="(e) => paymentKeydown(e, 'voucher')"
                                 clearable>
                                 <template slot="prepend">{{ $t('voucher') }}</template>
                             </el-input>
@@ -218,7 +217,7 @@
         <OrderDiscount
             :showDialog="discountDialog"
             :finalAmount="finalAmount"
-            @parent-update="updateOrder"
+            @parent-update="updateOrder(false)"
             @parent-close="discountDialog = false"/>
         <!-- 发票 -->
         <Invoice
@@ -229,7 +228,7 @@
         <OrderRemark
             :showDialog="remarkDialog"
             :orderRemark="orderRemark"
-            @parent-update="updateOrder"
+            @parent-update="updateOrder(true)"
             @parent-close="remarkDialog = false"/>
     </div>
 </template>
@@ -439,7 +438,7 @@ export default {
     
         // 支付框按键按下
         paymentKeydown (event, type) {
-            if(event.key === 'Tab' && type !== 'voucher') {
+            if(event.key === 'Tab') {
                 this.cashAmount = ''
                 this.cardAmount = ''
                 this.bizumAmount = ''
@@ -474,7 +473,7 @@ export default {
                         message: res.msg,
                         type: 'success'
                     })
-                    this.updateOrder()
+                    this.updateOrder(false)
                 } else {
                     this.$message({
                         showClose: true,
@@ -496,7 +495,7 @@ export default {
                         message: res.msg,
                         type: 'success'
                     })
-                    this.updateOrder()
+                    this.updateOrder(false)
                 } else {
                     this.$message({
                         showClose: true,
@@ -517,7 +516,7 @@ export default {
                         message: res.msg,
                         type: 'success'
                     })
-                    this.updateOrder()
+                    this.updateOrder(false)
                 } else {
                     this.$message({
                         showClose: true,
@@ -573,9 +572,9 @@ export default {
                         this.prePressPrint([...payments, {
                             paymode: 0,
                             amount: this.roundingAmount
-                        }])
+                        }], 'preprint')
                     } else {
-                        this.prePressPrint(payments)
+                        this.prePressPrint(payments, 'preprint')
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
@@ -584,7 +583,7 @@ export default {
                         roundingAmount: this.roundingAmount
                     })
                     // 更新订单
-                    this.updateOrder()
+                    this.updateOrder(false)
                     // 关闭买单
                     this.closeCheckout()
                 } else {
@@ -601,7 +600,7 @@ export default {
             })
         },
         // 预打
-        prePressPrint (payments, printType = 'preprint') {
+        prePressPrint (payments, printType = 'preprint', receiptNumber = '') {
             let items = this.orderData.items.map(item => {
                 return {
                     ...item,
@@ -632,8 +631,9 @@ export default {
             let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
                 printType,
+                receiptNumber,
                 name: this.shopInfo.name,
-                company: this.shopInfo.companyName,
+                company: this.shopInfo.companyName || '',
                 address: this.shopInfo.address,
                 pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
                 country: this.shopInfo.countryName,
@@ -728,18 +728,18 @@ export default {
                             this.prePressPrint([...payments, {
                                 paymode: 0,
                                 amount: this.roundingAmount
-                            }], 'invoice')
+                            }], 'invoice', res.data.receiptNumber)
                         } else {
-                            this.prePressPrint(payments, 'invoice')
+                            this.prePressPrint(payments, 'invoice', res.data.receiptNumber)
                         }
                     } else {
                         if (this.roundingAmount > 0) {
                             this.invoicePrint([...payments, {
                                 paymode: 0,
                                 amount: this.roundingAmount
-                            }], invoiceBuyer)
+                            }], invoiceBuyer, res.data.receiptNumber)
                         } else {
-                            this.invoicePrint(payments, invoiceBuyer)
+                            this.invoicePrint(payments, invoiceBuyer, res.data.receiptNumber)
                         }
                     }
                     // 保存买单信息
@@ -749,7 +749,7 @@ export default {
                         roundingAmount: this.roundingAmount
                     })
                     // 更新订单
-                    this.updateOrder()
+                    this.updateOrder(false)
                     // 关闭买单
                     this.closeCheckout()
                 } else {
@@ -763,7 +763,7 @@ export default {
                 this.$message.error(err);
             })
         },
-        invoicePrint (payments, invoiceBuyer) {
+        invoicePrint (payments, invoiceBuyer, receiptNumber) {
             // 发票名称
             let invoiceName = invoiceBuyer.type === 102 ? `${invoiceBuyer.firstName} ${invoiceBuyer.lastName}` : invoiceBuyer.name
             let invoiceData = {
@@ -806,6 +806,7 @@ export default {
             })
             let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
+                receiptNumber,
                 name: this.shopInfo.name,
                 company: this.shopInfo.companyName,
                 address: this.shopInfo.address,
@@ -903,9 +904,9 @@ export default {
                             this.prePressPrint([...payments, {
                                 paymode: 0,
                                 amount: this.roundingAmount
-                            }], 'tax')
+                            }], 'tax', res.data.receiptNumber)
                         } else {
-                            this.prePressPrint(payments, 'tax')
+                            this.prePressPrint(payments, 'tax', res.data.receiptNumber)
                         }
                     } else {
                         this.taxPrint();
@@ -917,7 +918,7 @@ export default {
                         roundingAmount: this.roundingAmount
                     })
                     // 更新订单
-                    this.updateOrder()
+                    this.updateOrder(false)
                     // 关闭买单
                     this.closeCheckout()
                 } else {
@@ -1155,17 +1156,20 @@ export default {
                     this.paymentType = type
                     this.$refs.cashRef.$el.querySelector('input').focus();
                     this.cashAmount = this.calcRemainAmount()
+                    this.isFirstCash = true
                     break;
                 case 'card':
                     this.paymentType = type
                     this.$refs.cardRef.$el.querySelector('input').focus();
                     this.cardAmount = this.calcRemainAmount()
+                    this.isFirstCard = true
                     break;
                 case 'bizum':
                     if (!this.paymodes.includes(106)) return;
                     this.paymentType = type
                     this.$refs.bizumRef.$el.querySelector('input').focus();
                     this.bizumAmount = this.calcRemainAmount()
+                    this.isFirstBizum = true
                     break;
                 case 'ticket':
                     this.paymentType = type
@@ -1247,9 +1251,9 @@ export default {
             this.discountDialog = true
         },
         // 更新订单
-        updateOrder () {
+        updateOrder (b = false) {
             // 更新会话
-            this.$emit('session-update')
+            this.$emit('session-update', b)
         },
         
         // 关闭买单

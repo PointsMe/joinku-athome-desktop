@@ -177,7 +177,11 @@
         }
         html += '<p class="line"></p>';
         
-        html += '<p class="align-c tips">FATTURA SEMPLIFICATA</p>';
+        html += '<p class="align-c tips">FATTURA</p>';
+        html += '<p class="row">'+
+                '<span>N. Fattura</span>'+
+                '<span>' + data.receiptNumber + '</span>'+
+                '</p>';
         html += '<p class="row">'+
                 '<span>Data</span>'+
                 '<span>' + data.time + '</span>'+

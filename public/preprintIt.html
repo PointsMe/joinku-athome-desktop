@@ -161,9 +161,17 @@
         if (data.printType === 'preprint') {
             html += '<p class="align-c tips">DOCUMENTO DI GESTIONE</p>';
         } else if (data.printType === 'invoice') {
-            html += '<p class="align-c tips">FATTURA SEMPLIFICATA</p>';
-        } else if (data.printType === 'tax') {
             html += '<p class="align-c tips">FATTURA</p>';
+            html += '<p class="row">'+
+                    '<span>N. Fattura</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
+        } else if (data.printType === 'tax') {
+            html += '<p class="align-c tips">FATTURA SEMPLIFICATA</p>';
+            html += '<p class="row">'+
+                    '<span>N. Documento</span>'+
+                    '<span>' + data.receiptNumber + '</span>'+
+                    '</p>';
         }
         html += '<p class="row">'+
                 '<span>Data</span>'+
