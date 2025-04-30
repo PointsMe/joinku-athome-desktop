@@ -764,7 +764,7 @@ export default {
                 this.$message.error(err);
             })
         },
-        invoicePrint (payments, invoiceBuyer, receiptNumber) {
+        invoicePrint (payments, invoiceBuyer, receiptNumber = '') {
             // 发票名称
             let invoiceName = invoiceBuyer.type === 102 ? `${invoiceBuyer.firstName} ${invoiceBuyer.lastName}` : invoiceBuyer.name
             let invoiceData = {
