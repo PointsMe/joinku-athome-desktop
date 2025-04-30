@@ -462,11 +462,22 @@ export default {
                             this.savePrinterName(item.name)
                         }
                     });
-                    const webview = document.querySelector('#printBarcode');
-                    webview.send('webview-print-render', {
+                    
+                    let printData = {
+                        name: this.shopInfo.name,
+                        company: this.shopInfo.companyName || '',
+                        address: this.shopInfo.address,
+                        pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
+                        country: this.shopInfo.countryName,
+                        vatNumber: this.shopInfo.vatNumber,
+                        taxCode: this.shopInfo.taxCode,
+                        contactPhone: this.shopInfo.contactPhone,
                         price,
-                        img: url
-                    }); //将数据发送至webview
+                        img: url,
+                        time: moment(new Date()).format('DD/MM/YYYY HH:mm')
+                    }
+                    const webview = document.querySelector('#printBarcode');
+                    webview.send('webview-print-render', printData); //将数据发送至webview
                 } else {
                     this.$message({
                         showClose: true,
@@ -528,6 +539,7 @@ export default {
                 country: this.shopInfo.countryName,
                 vatNumber: this.shopInfo.vatNumber,
                 taxCode: this.shopInfo.taxCode,
+                contactPhone: this.shopInfo.contactPhone,
                 operatorName: this.userName,
                 items: this.productList,
                 taxList,
@@ -766,6 +778,7 @@ export default {
                 country: this.shopInfo.countryName,
                 vatNumber: this.shopInfo.vatNumber,
                 taxCode: this.shopInfo.taxCode,
+                contactPhone: this.shopInfo.contactPhone,
                 operatorName: this.userName,
                 items: this.productList,
                 taxList,

@@ -152,17 +152,13 @@
         html = '<div class="container">'+//商家税票信息
                 '<p class="align-c tips">'+ data.name + '</p>'+
                 '<p class="align-c tips">' + data.company + '</p>' +
+                '<p class="align-c">公司税号 ' + data.vatNumber + '</p>'+
                 '<p class="align-c">' + data.address + '</p>'+
                 '<p class="align-c">' + data.pcg + '</p>'+
                 '<p class="align-c">' + data.country + '</p>'
-                // '<p class="align-c">NIF ' + data.vatNumber + '</p>'+
-                // '<p class="align-c">CIF ' + data.taxCode + '</p>'
-    
-        // html += '<p class="row">'+
-        //         '<span>FACTURA N.' + data.snf +' </span>'+
-        //         '<span>FECHA ' + data.time + '</span>'+
-        //         '</p>'
-        
+        if (data.contactPhone) {
+            html += '<p class="align-c">' + data.contactPhone + '</p>'
+        }
         html += '<p class="line"></p>';
         // 消费者税票信息
         html += '<p class="align-c tips">'+ data.invoiceData.name + '</p>'+
@@ -222,10 +218,10 @@
         html += '</div>';
         html += '<p class="line"></p>';
         //总计 SUB-TATALE
-        html += '<p class="row">'+
-                '<span>总计</span>'+
-                '<span>' + data.itemTotalAmount.toFixed(2).replace('.', ',') + '€</span>'+
-                '</p>';
+        // html += '<p class="row">'+
+        //         '<span>总计</span>'+
+        //         '<span>' + data.itemTotalAmount.toFixed(2).replace('.', ',') + '€</span>'+
+        //         '</p>';
         // 商品折扣
         if(data.itemDiscountAmount > 0){
             html += '<p class="row">'+

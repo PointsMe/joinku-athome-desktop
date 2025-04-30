@@ -22,7 +22,8 @@ export default new Vuex.Store({
             provinceCode: '',
             provinceName: '',
             city: '',
-            companyCountry: ''
+            companyCountry: '',
+            contactPhone: ''
         },
         userName: '',
         userNumber: '',

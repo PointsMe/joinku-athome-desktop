@@ -139,7 +139,8 @@ export default {
                         provinceCode,
                         provinceName,
                         city: res.data.city,
-                        companyCountry: res.data.country
+                        companyCountry: res.data.country,
+                        contactPhone: res.data.contactPhone || ''
                     })
                 } else {
                     this.$message({
