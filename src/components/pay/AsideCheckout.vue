@@ -776,6 +776,7 @@ export default {
                 province: invoiceBuyer.provinceName,
                 vatNumber: invoiceBuyer.vatNumber,
                 taxCode: invoiceBuyer.taxCode,
+                contactPhone: invoiceBuyer.contactPhone
             }
             // 菜品
             let items = this.orderData.items.map(item => {
@@ -809,7 +810,7 @@ export default {
             let printData = {
                 receiptNumber,
                 name: this.shopInfo.name,
-                company: this.shopInfo.companyName,
+                company: this.shopInfo.companyName || '',
                 address: this.shopInfo.address,
                 pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
                 country: this.shopInfo.countryName,

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>条码</title>
+    <style>
+        @page{
+            margin: 0.2cm;
+        }
+        div, p, span{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        i{
+            font-style: normal;
+        }
+        body{
+            font-size: 14px;
+            font-family: 'Arial Narrow';
+            color: #000000;
+        }
+        .container{
+            padding-left: 4px;
+            padding-right: 4px;
+        }
+        p{
+            margin-top: 3px;
+            margin-bottom: 3px;
+        }
+        .align-c{
+            text-align: center;
+        }
+        .tips{
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+        .line{
+            height: 1px;
+            border-bottom: 1px dashed #000;
+            margin-top: 4px;
+            margin-bottom: 4px;
+        }
+        .text{
+            font-size: 20px;
+            line-height: 30px;
+            text-align: center;
+            font-weight: 600;
+            color: #000000;
+        }
+        .barcode{
+            margin-top: 6px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .barcode img{
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body id='bd'>
+</body>
+<script>
+    //引入ipcRenderer对象
+    const {ipcRenderer} = require('electron')
+    
+    //监听渲染线程传过来的webview-print-render事件
+    ipcRenderer.on('webview-print-render', (event, data) => {
+        let html = '';
+        html = '<div class="container">'+//商家税票信息
+                '<p class="align-c tips">' + data.company + '</p>' +
+                '<p class="align-c tips">'+ data.name + '</p>'+
+                '<p class="align-c">' + data.address + '</p>'+
+                '<p class="align-c">' + data.pcg + '</p>'+
+                '<p class="align-c">' + data.country + '</p>'+
+                '<p class="align-c">NIF ' + data.vatNumber + '</p>'
+        if (data.contactPhone) {
+            html += '<p class="align-c">' + data.contactPhone + '</p>'
+        }
+        html += '<p class="line"></p>';
+        html += '<p class="text">' + data.price.toFixed(2).replace('.', ',') + '€</p>'
+        html += '<div class="barcode">'+
+                "<img src="+ data.img +">"+
+                '</div>'
+        html += '<p class="align-c">' + data.time + '</p>'
+        html += '</div>';
+        document.getElementById('bd').innerHTML = html;
+        //当内容插入到页面后，通过ipcRenderer对象的sendToHost方法和渲染线程通讯，告诉渲染线程打印的内容已经准备完毕，请开始打印操作
+        ipcRenderer.sendToHost('webview-print-do');
+    });
+</script>
+</html>

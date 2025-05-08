@@ -476,8 +476,28 @@ export default {
                         img: url,
                         time: moment(new Date()).format('DD/MM/YYYY HH:mm')
                     }
-                    const webview = document.querySelector('#printBarcode');
-                    webview.send('webview-print-render', printData); //将数据发送至webview
+                    if (this.shopInfo.countryCode === 'IT') {
+                        let webview = document.querySelector('#printBarcodeIt')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ZH') {
+                        let webview = document.querySelector('#printBarcodeZh')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'EN') {
+                        let webview = document.querySelector('#printBarcodeEn')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'FR') {
+                        let webview = document.querySelector('#printBarcodeFr')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'DE') {
+                        let webview = document.querySelector('#printBarcodeDe')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ES' || this.shopInfo.countryCode === 'CA') {
+                        const webview = document.querySelector('#printBarcodeEs');
+                        webview.send('webview-print-render', printData); //将数据发送至webview
+                    } else {
+                        let webview = document.querySelector('#printBarcodeEn')
+                        webview.send('webview-print-render', printData)
+                    }
                 } else {
                     this.$message({
                         showClose: true,
@@ -745,6 +765,7 @@ export default {
                 province: invoiceBuyer.provinceName,
                 vatNumber: invoiceBuyer.vatNumber,
                 taxCode: invoiceBuyer.taxCode,
+                contactPhone: invoiceBuyer.contactPhone
             }
             // 菜品
             let taxObj = this.taxGroupBy(this.productList)
@@ -772,7 +793,7 @@ export default {
             let printData = {
                 receiptNumber: this.receiptNumber,
                 name: this.shopInfo.name,
-                company: this.shopInfo.companyName,
+                company: this.shopInfo.companyName || '',
                 address: this.shopInfo.address,
                 pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
                 country: this.shopInfo.countryName,

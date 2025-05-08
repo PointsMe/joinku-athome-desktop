@@ -142,6 +142,10 @@ export default {
                         companyCountry: res.data.country,
                         contactPhone: res.data.contactPhone || ''
                     })
+                } else if (res.code === 30001) {
+                    // 未激活
+                    localStorage.setItem('ifActivate', JSON.stringify(false));
+                    this.currentTabComponent = 'Activate'
                 } else {
                     this.$message({
                         showClose: true,

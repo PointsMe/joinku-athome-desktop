@@ -150,13 +150,12 @@
     ipcRenderer.on('webview-print-render', (event, data) => {
         let html = '';
         html = '<div class="container">'+//商家税票信息
-                '<p class="align-c tips">'+ data.name + '</p>'+
                 '<p class="align-c tips">' + data.company + '</p>' +
-                '<p class="align-c">VAT ID ' + data.vatNumber + '</p>'+
+                '<p class="align-c tips">'+ data.name + '</p>'+
                 '<p class="align-c">' + data.address + '</p>'+
                 '<p class="align-c">' + data.pcg + '</p>'+
                 '<p class="align-c">' + data.country + '</p>'+
-                '<p class="align-c">' + data.country + '</p>'
+                '<p class="align-c">VAT ID ' + data.vatNumber + '</p>'
         if (data.contactPhone) {
             html += '<p class="align-c">' + data.contactPhone + '</p>'
         }

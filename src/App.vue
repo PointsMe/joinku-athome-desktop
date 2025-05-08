@@ -41,8 +41,18 @@
       <webview id="printStatsDe" src="/printStatsDe.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
       <!-- 日总结 - 西班牙 -->
       <webview id="printStatsEs" src="/printStatsEs.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
-      <!-- 条码 -->
-      <webview id="printBarcode" src="/printBarcode.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
+      <!-- 条码 - 意大利 -->
+      <webview id="printBarcodeIt" src="/printBarcodeIt.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
+      <!-- 条码 - 中国 -->
+      <webview id="printBarcodeZh" src="/printBarcodeZh.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
+      <!-- 条码 - 英国 -->
+      <webview id="printBarcodeEn" src="/printBarcodeEn.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
+      <!-- 条码 - 法国 -->
+      <webview id="printBarcodeFr" src="/printBarcodeFr.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
+      <!-- 条码 - 德国 -->
+      <webview id="printBarcodeDe" src="/printBarcodeDe.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
+      <!-- 条码 - 西班牙 -->
+      <webview id="printBarcodeEs" src="/printBarcodeEs.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
       <!-- 图片 -->
       <webview id="printImage" src="/printImage.html" nodeintegration webpreferences="contextIsolation=no" v-show="false"></webview>
   </div>
@@ -449,11 +459,101 @@ export default {
                 }
             });
     
-            // 条码
-            const webviewBarcode = document.querySelector('#printBarcode');
-            webviewBarcode.addEventListener('ipc-message', (event) => {
+            // 条码（意大利）
+            const webviewBarcodeIt = document.querySelector('#printBarcodeIt');
+            webviewBarcodeIt.addEventListener('ipc-message', (event) => {
                 if (event.channel === 'webview-print-do') {
-                    webviewBarcode
+                    webviewBarcodeIt
+                        .print({
+                            silent: true,//静默打印
+                            printBackground: true,
+                            deviceName: this.printerName, //打印机名称
+                        })
+                        .then((res) => {
+                            console.log('ok')
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+            });
+            // 条码（中国）
+            const webviewBarcodeZh = document.querySelector('#printBarcodeZh');
+            webviewBarcodeZh.addEventListener('ipc-message', (event) => {
+                if (event.channel === 'webview-print-do') {
+                    webviewBarcodeZh
+                        .print({
+                            silent: true,//静默打印
+                            printBackground: true,
+                            deviceName: this.printerName, //打印机名称
+                        })
+                        .then((res) => {
+                            console.log('ok')
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+            });
+            // 条码（英国）
+            const webviewBarcodeEn = document.querySelector('#printBarcodeEn');
+            webviewBarcodeEn.addEventListener('ipc-message', (event) => {
+                if (event.channel === 'webview-print-do') {
+                    webviewBarcodeEn
+                        .print({
+                            silent: true,//静默打印
+                            printBackground: true,
+                            deviceName: this.printerName, //打印机名称
+                        })
+                        .then((res) => {
+                            console.log('ok')
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+            });
+            // 条码（法国）
+            const webviewBarcodeFr = document.querySelector('#printBarcodeFr');
+            webviewBarcodeFr.addEventListener('ipc-message', (event) => {
+                if (event.channel === 'webview-print-do') {
+                    webviewBarcodeFr
+                        .print({
+                            silent: true,//静默打印
+                            printBackground: true,
+                            deviceName: this.printerName, //打印机名称
+                        })
+                        .then((res) => {
+                            console.log('ok')
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+            });
+            // 条码（德国）
+            const webviewBarcodeDe = document.querySelector('#printBarcodeDe');
+            webviewBarcodeDe.addEventListener('ipc-message', (event) => {
+                if (event.channel === 'webview-print-do') {
+                    webviewBarcodeDe
+                        .print({
+                            silent: true,//静默打印
+                            printBackground: true,
+                            deviceName: this.printerName, //打印机名称
+                        })
+                        .then((res) => {
+                            console.log('ok')
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+            });
+            // 条码（西班牙）
+            const webviewBarcodeEs = document.querySelector('#printBarcodeEs');
+            webviewBarcodeEs.addEventListener('ipc-message', (event) => {
+                if (event.channel === 'webview-print-do') {
+                    webviewBarcodeEs
                         .print({
                             silent: true,//静默打印
                             printBackground: true,

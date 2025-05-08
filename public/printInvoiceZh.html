@@ -150,12 +150,12 @@
     ipcRenderer.on('webview-print-render', (event, data) => {
         let html = '';
         html = '<div class="container">'+//商家税票信息
-                '<p class="align-c tips">'+ data.name + '</p>'+
                 '<p class="align-c tips">' + data.company + '</p>' +
-                '<p class="align-c">公司税号 ' + data.vatNumber + '</p>'+
+                '<p class="align-c tips">'+ data.name + '</p>'+
                 '<p class="align-c">' + data.address + '</p>'+
                 '<p class="align-c">' + data.pcg + '</p>'+
-                '<p class="align-c">' + data.country + '</p>'
+                '<p class="align-c">' + data.country + '</p>'+
+                '<p class="align-c">公司税号 ' + data.vatNumber + '</p>'
         if (data.contactPhone) {
             html += '<p class="align-c">' + data.contactPhone + '</p>'
         }
@@ -166,14 +166,17 @@
                 '<p class="align-c">' + data.invoiceData.zipcode + ' '  + data.invoiceData.city + ' ' + data.invoiceData.province + '</p>' +
                 '<p class="align-c">' + data.invoiceData.country + '</p>';
         if (data.invoiceData.vatNumber) {
-            html += '<p class="align-c">' + data.invoiceData.vatNumber + '</p>';
+            html += '<p class="align-c">公司税号 ' + data.invoiceData.vatNumber + '</p>';
         }
         if (data.invoiceData.taxCode) {
-            html += '<p class="align-c">' + data.invoiceData.taxCode + '</p>';
+            html += '<p class="align-c">通用税号 ' + data.invoiceData.taxCode + '</p>';
+        }
+        if (data.invoiceData.contactPhone) {
+            html += '<p class="align-c">' + data.invoiceData.contactPhone + '</p>';
         }
         html += '<p class="line"></p>';
         
-        html += '<p class="align-c tips">发票</p>';
+        html += '<p class="align-c tips">***发票***</p>';
         html += '<p class="row">'+
                 '<span>发票号码</span>'+
                 '<span>' + data.receiptNumber + '</span>'+

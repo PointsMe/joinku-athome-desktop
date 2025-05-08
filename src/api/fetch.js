@@ -32,11 +32,9 @@ instance.interceptors.response.use(function(response) {
             name: 'Login'
         });
     } else if (response.data.code === 30001) {
-        // 未激活
-        localStorage.setItem('ifActivate', JSON.stringify(false));
-        if (router.currentRoute.name === 'Login') {
-            location.reload();
-        } else {
+        if (router.currentRoute.name !== 'Login') {
+            // 未激活
+            localStorage.setItem('ifActivate', JSON.stringify(false));
             router.replace({
                 name: 'Login'
             });

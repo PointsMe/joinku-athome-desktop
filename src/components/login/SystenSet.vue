@@ -130,7 +130,9 @@ export default {
     },
     // 挂载完成
     mounted() {
-        this.formData.ip = this.localIp
+        // 系统设置
+        this.formData.ip = localStorage.getItem("systemIP") || this.localIp
+        this.formData.port = localStorage.getItem("systemPort") || '14741'
     },
     // 销毁之前
     beforeDestroy() {
