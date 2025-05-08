@@ -98,6 +98,11 @@ export default {
                     createMenu()
                     // 路由跳转
                     this.$router.replace({ path: "/" });
+                } else if (res.code === 30001) {
+                    // 未激活
+                    localStorage.setItem('ifActivate', JSON.stringify(false));
+                    // 刷新页面
+                    location.reload();
                 } else {
                     this.$message({
                         showClose: true,
