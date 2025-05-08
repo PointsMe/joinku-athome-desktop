@@ -922,6 +922,18 @@
     "name": "Spain",
     "provinceList": [
       {
+        "name": "SEVILLA",
+        "code": "SEVILLA"
+      },
+      {
+        "name": "ANDALUCIA",
+        "code": "ANDALUCIA"
+      },
+      {
+        "name": "Madrid",
+        "code": "MADRID"
+      },
+      {
         "name": "Álava",
         "code": "VI"
       },
