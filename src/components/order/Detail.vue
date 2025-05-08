@@ -754,15 +754,13 @@ export default {
             })
         },
         invoicePrint (invoiceBuyer) {
-            // 发票名称
-            let invoiceName = invoiceBuyer.type === 102 ? `${invoiceBuyer.firstName} ${invoiceBuyer.lastName}` : invoiceBuyer.name
             let invoiceData = {
-                name: invoiceName,
+                name: invoiceBuyer.name,
                 address: invoiceBuyer.address,
                 zipcode: invoiceBuyer.zipcode,
                 city: invoiceBuyer.city,
-                country: invoiceBuyer.countryName,
-                province: invoiceBuyer.provinceName,
+                country: invoiceBuyer.province,
+                province: invoiceBuyer.province,
                 vatNumber: invoiceBuyer.vatNumber,
                 taxCode: invoiceBuyer.taxCode,
                 contactPhone: invoiceBuyer.contactPhone

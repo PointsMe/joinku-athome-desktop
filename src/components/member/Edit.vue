@@ -34,13 +34,13 @@
                             <el-input
                                 type="text"
                                 v-model="formData.vatNumber"
-                                maxlength="28"
+                                maxlength="32"
                                 show-word-limit
                                 @blur="vatNumberBlur">
                             </el-input>
                         </el-form-item>
                         <el-form-item :label="$t('generalTax')" prop="taxCode" key="taxCode" v-if="formData.type === 101">
-                            <el-input type="text" v-model="formData.taxCode" maxlength="28" show-word-limit>
+                            <el-input type="text" v-model="formData.taxCode" maxlength="32" show-word-limit>
                             </el-input>
                         </el-form-item>
                         <el-form-item :label="$t('generalTax')" v-else>

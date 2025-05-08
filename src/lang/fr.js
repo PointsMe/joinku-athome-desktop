@@ -200,6 +200,7 @@ export default {
     len1_60: 'Longueur entre 1 et 60 caractères',
     len1_80: 'Longueur entre 1 et 80 caractères',
     len11_16: 'Longueur entre 11 et 16 caractères',
+    len5_6: 'Longueur entre 5 et 6 caractères',
     len5_200: 'Longueur entre 5 et 200 caractères',
     leng5: 'Longueur de 5 caractères',
     leng6: 'Longueur de 6 caractères',

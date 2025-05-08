@@ -200,6 +200,7 @@ export default {
     len1_60: 'Length Between 1 ~ 60 Characters',
     len1_80: 'Length Between 1 ~ 80 Characters',
     len11_16: 'Length Between 11 ~ 16 Characters',
+    len5_6: 'Length Between 5 ~ 6 Characters',
     len5_200: 'Length Between 5 ~ 200 Characters',
     leng5: 'Length is 5 Characters',
     leng6: 'Length is 6 Characters',

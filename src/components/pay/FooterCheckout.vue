@@ -63,7 +63,7 @@
                 </div>
             </div>
             <div class="not-bound" v-else>
-                <el-button class="bind-btn" @click="memberDialog = true">{{ $t('bindMember') }}</el-button>
+                <el-button class="bind-btn" @click="cellShowMember()">{{ $t('bindMember') }}</el-button>
                 <el-button class="add-btn" @click="addMemberDialog = true">{{ $t('addMember') }}</el-button>
             </div>
         </div>

@@ -203,13 +203,13 @@
             </div>
             <div class="btns">
                 <div class="btn prerat" v-if="orderData && orderData.cashierSetting && orderData.cashierSetting.enableSettle">
-                    <el-button @click="prePressCheck" :disabled="preDisabled">{{ $t('preratting') }}</el-button>
+                    <el-button @click="prePressCheck()" :disabled="preDisabled">{{ $t('preratting') }}</el-button>
                 </div>
                 <div class="btn invoice">
-                    <el-button @click="invoiceDialog = true">{{ $t('invoice') }}</el-button>
+                    <el-button @click="cellInvoice()">{{ $t('invoice') }}</el-button>
                 </div>
                 <div class="btn tax">
-                    <el-button @click="taxCheck" :disabled="preDisabled">{{ $t('taxReceipt') }}</el-button>
+                    <el-button @click="taxCheck()" :disabled="preDisabled">{{ $t('taxReceipt') }}</el-button>
                 </div>
             </div>
         </div>
@@ -222,6 +222,7 @@
         <!-- 发票 -->
         <Invoice
             :showDialog="invoiceDialog"
+            :memberId="memberId"
             @parent-update="invoiceCheck"
             @parent-close="invoiceDialog = false"/>
         <!-- 订单备注 -->
@@ -278,6 +279,7 @@ export default {
             lotteryCode: '',
             preDisabled: false,
             invoiceDialog: false,
+            memberId: '',
             paymentType: 'cash',
             remarkDialog: false,
             orderRemark: '',
@@ -766,14 +768,13 @@ export default {
         },
         invoicePrint (payments, invoiceBuyer, receiptNumber = '') {
             // 发票名称
-            let invoiceName = invoiceBuyer.type === 102 ? `${invoiceBuyer.firstName} ${invoiceBuyer.lastName}` : invoiceBuyer.name
             let invoiceData = {
-                name: invoiceName,
+                name: invoiceBuyer.name,
                 address: invoiceBuyer.address,
                 zipcode: invoiceBuyer.zipcode,
                 city: invoiceBuyer.city,
-                country: invoiceBuyer.countryName,
-                province: invoiceBuyer.provinceName,
+                country: invoiceBuyer.country,
+                province: invoiceBuyer.province,
                 vatNumber: invoiceBuyer.vatNumber,
                 taxCode: invoiceBuyer.taxCode,
                 contactPhone: invoiceBuyer.contactPhone
@@ -1246,6 +1247,7 @@ export default {
         },
         // 发票
         cellInvoice () {
+            this.memberId = this.orderData && this.orderData.member ? this.orderData.member.id : ''
             this.invoiceDialog = true
         },
         // 整单折扣
