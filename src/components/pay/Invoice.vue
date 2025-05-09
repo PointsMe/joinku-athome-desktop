@@ -51,7 +51,7 @@
                             <el-select clearable v-model="formData.country" filterable @change="countryChange">
                                 <el-option
                                     v-for="item in countryOptions"
-                                    :key="item.code"
+                                    :key="item.id"
                                     :label="item.name"
                                     :value="item.name">
                                 </el-option>
@@ -61,7 +61,7 @@
                             <el-select clearable filterable v-model="formData.province">
                                 <el-option
                                     v-for="item in provinceOptions"
-                                    :key="item.code"
+                                    :key="item.id"
                                     :label="item.name"
                                     :value="item.name">
                                 </el-option>
@@ -279,11 +279,12 @@ export default {
         },
         // 发票搜索
         searchVatNumber(queryString, cb) {
-            if (queryString.length < 3) {
+            if (queryString.length < 3 || this.formData.type === 103) {
                 cb([])
                 return
             }
             let params = {
+                type: this.formData.type === 102 ? 101 : 102,
                 keyword: '',
                 vatNumber: queryString,
                 page: 1,
@@ -302,11 +303,12 @@ export default {
             });
         },
         searchTaxCode(queryString, cb) {
-            if (queryString.length < 3) {
+            if (queryString.length < 3 || this.formData.type === 103) {
                 cb([])
                 return
             }
             let params = {
+                type: this.formData.type === 102 ? 101 : 102,
                 keyword: '',
                 taxCode: queryString,
                 page: 1,
@@ -325,36 +327,24 @@ export default {
             });
         },
         processMemberList (list) {
-            let useableList = []
-            list.forEach(item => {
-                let type = 100
-                if (this.formData.type === 101) {
-                    type = 102
-                } else if (this.formData.type === 102) {
-                    type = 101
-                } else if (this.formData.type === 103) {
-                    type = 103
-                }
-                if (type === item.type) {
-                    if (item.vatNumber) {
-                        useableList.push({
-                            ...item,
-                            value: `${item.username} - ${item.vatNumber}`
-                        })
-                    } else if (item.taxCode){
-                        useableList.push({
-                            ...item,
-                            value: `${item.username} - ${item.taxCode}`
-                        })
-                    } else {
-                        useableList.push({
-                            ...item,
-                            value: item.username
-                        })
+            return list.map(item => {
+                if (item.vatNumber) {
+                    return {
+                        ...item,
+                        value: `${item.username} - ${item.vatNumber}`
+                    }
+                } else if (item.taxCode){
+                    return {
+                        ...item,
+                        value: `${item.username} - ${item.taxCode}`
+                    }
+                } else {
+                    return {
+                        ...item,
+                        value: item.username
                     }
                 }
             })
-            return useableList
         },
         // 发票搜索选择
         handleSelectInvoice(data) {
