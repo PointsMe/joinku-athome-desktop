@@ -17,11 +17,8 @@
                                 <el-radio-button :label="103">{{$t('bussiness')}}</el-radio-button>
                             </el-radio-group>
                         </el-form-item>
-                        <el-form-item prop="name" :label="$t('companyName')" key="name" v-if="formData.type === 101 || formData.type === 103">
-                            <el-input v-model="formData.name" clearable></el-input>
-                        </el-form-item>
-                        <el-form-item :label="$t('personalName')" v-if="formData.type === 102">
-                            <el-input v-model="formData.name" clearable></el-input>
+                        <el-form-item prop="name" :label="nameLabel" key="name">
+                            <el-input v-model="formData.name" maxlength="80" clearable></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('receiptCode')" prop="receiptCode">
                             <el-input v-model="formData.receiptCode" clearable show-word-limit></el-input>
@@ -36,12 +33,12 @@
                             </span>
                             <el-autocomplete v-model="formData.vatNumber" :fetch-suggestions="searchVatNumber" @select="handleSelectInvoice">
                                 <template slot-scope="{ item }">
-                                    <div class="name" style="width: 100%;word-wrap:break-word;line-height: 20px;white-space: normal;">{{ item.value }}</div>
+                                    <div class="name" style="width: 100%; word-wrap:break-word; line-height: 20px; white-space: normal;">{{ item.value }}</div>
                                 </template>
                             </el-autocomplete>
                         </el-form-item>
                         <el-form-item :label="$t('taxCode')" class="search" prefix-icon="el-icon-search" prop="taxCode" key="taxCode" v-if="formData.type === 101 || formData.type === 102">
-                            <span slot="label" style="font-weight: bold;color: #606266;"><i class="el-icon-search" style="margin-right: 5px;"></i>{{$t('taxCode')}}</span>
+                            <span slot="label" style="font-weight: bold; color: #606266;"><i class="el-icon-search" style="margin-right: 5px;"></i>{{$t('taxCode')}}</span>
                             <el-autocomplete v-model="formData.taxCode" :fetch-suggestions="searchTaxCode" @select="handleSelectInvoice">
                                 <template slot-scope="{ item }">
                                     <div class="name" style="width: 100%;word-wrap:break-word;line-height: 20px;white-space: normal;">{{ item.value }}</div>
@@ -118,17 +115,6 @@ export default {
         }
     },
     data() {
-        const validateCompanyName = (rule, value, callback) => {
-            if (this.formData.type === 101 || this.formData.type === 103) {
-                if (!this.formData.name) {
-                    return callback(new Error(this.$t('inpContentHint')))
-                }
-                if (this.formData.name.length < 1 || this.formData.name.length > 80) {
-                    return callback(new Error(this.$t('len1_80')))
-                }
-            }
-            callback()
-        }
         const validateInvoiceCode = (rule, value, callback) => {
             if (!this.formData.receiptCode) {
                 return callback(new Error(this.$t('inpContentHint')))
@@ -187,7 +173,7 @@ export default {
             },
             rules: {
                 name: [
-                    { required: true,validator: validateCompanyName, trigger: 'change' }
+                    { required: true, message: this.$t('inpContentHint'), trigger: 'change' }
                 ],
                 country: [
                     { required: true, message: this.$t('inpContentHint'), trigger: 'change' }
@@ -297,65 +283,78 @@ export default {
                 cb([])
                 return
             }
-            this.querySearchAsync('vatNumber', queryString, cb);
-        },
-        searchTaxCode(queryString, cb) {
-            if (queryString.length < 3) {
-                cb([])
-                return
-            }
-            this.querySearchAsync('taxCode', queryString, cb);
-        },
-        querySearchAsync(type, queryString, cb) {
             let params = {
                 keyword: '',
+                vatNumber: queryString,
                 page: 1,
                 size: 10
-            }
-            if (type === 'vatNumber') {
-                params.vatNumber = queryString
-            } else if (type === 'taxCode') {
-                params.taxCode = queryString
             }
             queryMemberList(params).then(res => {
                 if (res.code === 20000) {
                     let list = res.data.list || []
-                    let useableList = []
-                    list.forEach(item => {
-                        let type = 100
-                        if (this.formData.type === 101) {
-                            type = 102
-                        } else if (this.formData.type === 102) {
-                            type = 101
-                        } else if (this.formData.type === 103) {
-                            type = 103
-                        }
-                        if (type === item.type) {
-                            if (item.vatNumber) {
-                                useableList.push({
-                                    ...item,
-                                    value: `${item.username} - ${item.vatNumber}`
-                                })
-                            } else if (item.taxCode){
-                                useableList.push({
-                                    ...item,
-                                    value: `${item.username} - ${item.taxCode}`
-                                })
-                            } else {
-                                useableList.push({
-                                    ...item,
-                                    value: item.username
-                                })
-                            }
-                        }
-                    })
-                    cb(useableList);
+                    const useableList = this.processMemberList(list)
+                    cb(useableList)
                 } else {
                     this.$message.error(res.msg);
                 }
             }).catch((err) => {
                 this.$message.error(err);
             });
+        },
+        searchTaxCode(queryString, cb) {
+            if (queryString.length < 3) {
+                cb([])
+                return
+            }
+            let params = {
+                keyword: '',
+                taxCode: queryString,
+                page: 1,
+                size: 10
+            }
+            queryMemberList(params).then(res => {
+                if (res.code === 20000) {
+                    let list = res.data.list || []
+                    const useableList = this.processMemberList(list)
+                    cb(useableList)
+                } else {
+                    this.$message.error(res.msg);
+                }
+            }).catch((err) => {
+                this.$message.error(err);
+            });
+        },
+        processMemberList (list) {
+            let useableList = []
+            list.forEach(item => {
+                let type = 100
+                if (this.formData.type === 101) {
+                    type = 102
+                } else if (this.formData.type === 102) {
+                    type = 101
+                } else if (this.formData.type === 103) {
+                    type = 103
+                }
+                if (type === item.type) {
+                    if (item.vatNumber) {
+                        useableList.push({
+                            ...item,
+                            value: `${item.username} - ${item.vatNumber}`
+                        })
+                    } else if (item.taxCode){
+                        useableList.push({
+                            ...item,
+                            value: `${item.username} - ${item.taxCode}`
+                        })
+                    } else {
+                        useableList.push({
+                            ...item,
+                            value: item.username
+                        })
+                    }
+                }
+            })
+            return useableList
         },
         // 发票搜索选择
         handleSelectInvoice(data) {
@@ -494,7 +493,15 @@ export default {
     
     },
     computed: {
-    
+        nameLabel () {
+            if (this.formData.type === 101 || this.formData.type === 103) {
+                return this.$t('companyName')
+            } else if (this.formData.type === 102) {
+                return this.$t('personalName')
+            } else {
+                return ''
+            }
+        }
     },
 }
 </script>
