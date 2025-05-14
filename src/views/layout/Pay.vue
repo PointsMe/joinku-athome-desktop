@@ -529,11 +529,11 @@ export default {
                 }
             } else if (!event.ctrlKey && event.altKey && event.key === 'y') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.cellPrepress()
+                    this.$refs.asideRef.cellCheckOrder(100)
                 }
             } else if (!event.ctrlKey && event.altKey && event.key === 'f') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.cellInvoice()
+                    this.$refs.asideRef.cellCheckOrder(102)
                 }
             } else if (event.ctrlKey && event.key === '/') {
                 if (this.pageType === 'checkout') {

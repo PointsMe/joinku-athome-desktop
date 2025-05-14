@@ -990,3 +990,80 @@ export const queryVersionInfo = () => {
         method: 'get'
     })
 }
+
+/**
+ * 获取Dojo列表
+ * @param params
+ * @returns {*}
+ */
+export const queryDojoList = () => {
+    return http({
+        url: '/api/v1/pay/dojo/selector',
+        method: 'post'
+    })
+}
+
+/**
+ * 创建支付意图
+ * @param params
+ * @returns {*}
+ */
+export const createPayIntent = (params) => {
+    return http({
+        url: '/api/v1/pay/dojo/create/pay/intent',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 创建支付会话
+ * @param params
+ * @returns {*}
+ */
+export const createPaySession = (params) => {
+    return http({
+        url: '/api/v1/pay/dojo/create/pay/session',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 取消支付会话
+ * @param params
+ * @returns {*}
+ */
+export const cancelPaySession = (params) => {
+    return http({
+        url: '/api/v1/pay/dojo/cancel/pay/session',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 查询支付结果
+ * @param params
+ * @returns {*}
+ */
+export const queryPayResult = (params) => {
+    return http({
+        url: '/api/v1/pay/dojo/get/pay/session',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 确认是否签名
+ * @param params
+ * @returns {*}
+ */
+export const confirmPaySign = (params) => {
+    return http({
+        url: '/api/v1/pay/dojo/confirm/sign',
+        method: 'post',
+        data: params
+    })
+}

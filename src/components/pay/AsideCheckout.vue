@@ -203,13 +203,13 @@
             </div>
             <div class="btns">
                 <div class="btn prerat" v-if="orderData && orderData.cashierSetting && orderData.cashierSetting.enableSettle">
-                    <el-button @click="prePressCheck()" :disabled="preDisabled">{{ $t('preratting') }}</el-button>
+                    <el-button @click="cellCheckOrder(100)" :disabled="preDisabled">{{ $t('preratting') }}</el-button>
                 </div>
                 <div class="btn invoice">
-                    <el-button @click="cellInvoice()">{{ $t('invoice') }}</el-button>
+                    <el-button @click="cellCheckOrder(102)">{{ $t('invoice') }}</el-button>
                 </div>
                 <div class="btn tax">
-                    <el-button @click="taxCheck()" :disabled="preDisabled">{{ $t('taxReceipt') }}</el-button>
+                    <el-button @click="cellCheckOrder(101)" :disabled="preDisabled">{{ $t('taxReceipt') }}</el-button>
                 </div>
             </div>
         </div>
@@ -231,6 +231,13 @@
             :orderRemark="orderRemark"
             @parent-update="updateOrder(true)"
             @parent-close="remarkDialog = false"/>
+        <!-- 刷卡支付 -->
+        <CardPay
+            :showDialog="posPayDialog"
+            :posAmount="posAmount"
+            :paymentIntentId="paymentIntentId"
+            @parent-update="posPaySuccess"
+            @parent-close="posPayDialog = false"/>
     </div>
 </template>
 
@@ -241,21 +248,30 @@ import OrderDiscount from "@/components/pay/OrderDiscount";
 import Invoice from "@/components/pay/Invoice";
 // 订单备注
 import OrderRemark from "@/components/pay/OrderRemark";
+// 刷卡支付
+import CardPay from '@/components/pay/CardPay'
 import {mapMutations, mapState} from "vuex";
 import {Debounce, formatDot, formatFloat, formatUseFloat} from "@/utils/common";
-import {cancelOrderDiscount, cancelOrderRounding, checkSession, orderRounding, queryVoucherUseState} from "@/api";
+import {
+    cancelOrderDiscount,
+    cancelOrderRounding,
+    checkSession,
+    createPayIntent,
+    orderRounding,
+    queryVoucherUseState
+} from "@/api";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
 import {validateFloat, validateZeroFloat} from "@/utils/validate";
 import {epsonTaxPrint} from "@/utils/printer";
-
 export default {
     name: "AsideCheckout",
     // 组件
     components: {
         OrderDiscount,
         Invoice,
-        OrderRemark
+        OrderRemark,
+        CardPay
     },
     props: {
         orderData: {
@@ -286,7 +302,11 @@ export default {
             isFirstCash: true,
             isFirstCard: true,
             isFirstBizum: true,
-            isAuto: true
+            isAuto: true,
+            receiptType: 100,   // 票据类型  100：待开发票  101：税票   102：发票
+            posAmount: 0,
+            paymentIntentId: '',
+            posPayDialog: false,
         };
     },
     // 计算属性
@@ -462,7 +482,7 @@ export default {
                 }
             } else if (event.key === 'Enter') {
                 if(this.preDisabled) return;
-                this.taxCheck()
+                this.cellCheckOrder(101)
             }
         },
     
@@ -540,22 +560,6 @@ export default {
         
         // 预打校验
         prePressCheck () {
-            if (!this.checkPayments()) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('payAmoNotRule'),
-                    type: 'warning'
-                });
-                return
-            }
-            if (this.roundingAmount < 0) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('payMinFinal'),
-                    type: 'warning'
-                });
-                return
-            }
             let { payments, vouchers } = this.disposePayments()
             let params = {
                 receipt: 100,
@@ -696,22 +700,6 @@ export default {
     
         // 发票校验
         invoiceCheck (invoiceBuyer) {
-            if (!this.checkPayments()) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('payAmoNotRule'),
-                    type: 'error'
-                });
-                return
-            }
-            if (this.roundingAmount < 0) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('payMinFinal'),
-                    type: 'error'
-                });
-                return
-            }
             let { payments, vouchers } = this.disposePayments()
             let params = {
                 receipt: 102,
@@ -873,22 +861,6 @@ export default {
     
         // 税票校验
         taxCheck () {
-            if (!this.checkPayments()) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('payAmoNotRule'),
-                    type: 'error'
-                });
-                return
-            }
-            if (this.roundingAmount < 0) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('payMinFinal'),
-                    type: 'error'
-                });
-                return
-            }
             let { payments, vouchers } = this.disposePayments()
             let params = {
                 receipt: 101,
@@ -1239,12 +1211,83 @@ export default {
                 this.roundingHandle()
             }
         },
-        // 预打
-        cellPrepress () {
-            if (!this.orderData.cashierSetting || !this.orderData.cashierSetting.enableSettle) return
+        
+        // 买单
+        cellCheckOrder (type) {
             if(this.preDisabled) return;
-            this.prePressCheck()
+            // 是否开启预打
+            if (type === 100 && (!this.orderData.cashierSetting || !this.orderData.cashierSetting.enableSettle)) return;
+            if (!this.checkPayments()) {
+                this.$message({
+                    showClose: true,
+                    message: this.$t('payAmoNotRule'),
+                    type: 'warning'
+                });
+                return
+            }
+            if (this.roundingAmount < 0) {
+                this.$message({
+                    showClose: true,
+                    message: this.$t('payMinFinal'),
+                    type: 'warning'
+                });
+                return
+            }
+            // pos机ID
+            const posId = localStorage.getItem("posId")
+            if (this.cardAmount && formatUseFloat(this.cardAmount) > 0 && !!posId) {
+                this.receiptType = type
+                const amount = formatUseFloat(this.cardAmount)
+                this.startPosPay(amount)
+                return;
+            }
+            if (type === 100) {
+                // 预打
+                this.prePressCheck()
+            } else if (type === 101) {
+                // 税票
+                this.taxCheck()
+            } else if (type === 103) {
+                // 发票
+                this.cellInvoice()
+            }
         },
+        // 发起支付意图
+        startPosPay (amount) {
+            let params = {
+                amount
+            }
+            createPayIntent(params).then(res => {
+                if (res.code === 20000) {
+                    this.posAmount = amount
+                    this.paymentIntentId = res.data.id
+                    this.posPayDialog = true
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: res.msg,
+                        type: 'error'
+                    })
+                }
+            }).catch(err => {
+                this.$message.error(err);
+            })
+        },
+        
+        // 支付成功
+        posPaySuccess () {
+            if (this.receiptType === 100) {
+                // 预打
+                this.prePressCheck()
+            } else if (this.receiptType === 101) {
+                // 税票
+                this.taxCheck()
+            } else if (this.receiptType === 102) {
+                // 发票
+                this.cellInvoice()
+            }
+        },
+       
         // 发票
         cellInvoice () {
             this.memberId = this.orderData && this.orderData.member ? this.orderData.member.id : ''
