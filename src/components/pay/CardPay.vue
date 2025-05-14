@@ -14,8 +14,8 @@
                 <img src="../../assets/images/swiping_card.gif">
             </div>
             <p class="content-hint" :class="{'success': finalStatus === 101, 'fail': finalStatus === 102}">{{ payHint }}</p>
-            <div class="content-handle" v-if="finalStatus === 100 && payStatus === 'SignatureVerificationRequired'">
-                <div class="btn">
+            <div class="content-handle" v-if="finalStatus === 100">
+                <div class="btn" v-if="payStatus === 'SignatureVerificationRequired'">
                     <el-button
                         type="primary"
                         :disabled="disabled"
@@ -23,16 +23,14 @@
                         {{ $t('confirmSign') }}
                     </el-button>
                 </div>
-                <div class="btn">
+                <div class="btn" v-if="payStatus === 'SignatureVerificationRequired'">
                     <el-button
                         :disabled="disabled"
                         @click="paySign(false)">
                         {{ $t('cancelSign') }}
                     </el-button>
                 </div>
-            </div>
-            <div class="content-handle" v-else-if="finalStatus === 100">
-                <div class="btn">
+                <div class="btn" v-else>
                     <el-button
                         :disabled="disabled"
                         @click="endPaySession()">
