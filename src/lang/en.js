@@ -294,6 +294,7 @@ export default {
     cardPay: 'Card Payment',
     cancelPay: 'Cancel Payment',
     confirmSign: 'Confirm Signature',
+    cancelSign: 'Cancel Signature',
     pleCardPay: 'Please pay by card!',
     pleConfirmSign: 'Please confirm signature!',
     paySuccess: 'Payment Successful!',

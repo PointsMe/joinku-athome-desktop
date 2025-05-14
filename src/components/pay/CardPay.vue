@@ -14,15 +14,24 @@
                 <img src="../../assets/images/swiping_card.gif">
             </div>
             <p class="content-hint" :class="{'success': finalStatus === 101, 'fail': finalStatus === 102}">{{ payHint }}</p>
-            <div class="content-handle" v-if="finalStatus === 100">
-                <div class="btn" v-if="payStatus === 'SignatureVerificationRequired'">
+            <div class="content-handle" v-if="finalStatus === 100 && payStatus === 'SignatureVerificationRequired'">
+                <div class="btn">
                     <el-button
                         type="primary"
                         :disabled="disabled"
-                        @click="paySign()">
+                        @click="paySign(true)">
                         {{ $t('confirmSign') }}
                     </el-button>
                 </div>
+                <div class="btn">
+                    <el-button
+                        :disabled="disabled"
+                        @click="paySign(false)">
+                        {{ $t('cancelSign') }}
+                    </el-button>
+                </div>
+            </div>
+            <div class="content-handle" v-else-if="finalStatus === 100">
                 <div class="btn">
                     <el-button
                         :disabled="disabled"
@@ -155,15 +164,17 @@ export default {
         },
     
         // 确认支付签名
-        paySign () {
+        paySign (b) {
             let params = {
                 paySessionId: this.paySessionId,
-                accepted: true
+                accepted: b
             }
             this.disabled = true
             confirmPaySign(params).then(res => {
                 if(res.code === 20000){
-                    console.log('confirm')
+                    if (!b) {
+                        this.finalStatus = 102
+                    }
                 } else {
                     this.$message({
                         showClose: true,

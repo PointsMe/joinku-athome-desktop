@@ -294,6 +294,7 @@ export default {
     cardPay: 'Pagament amb targeta',
     cancelPay: 'Cancel·lar pagament',
     confirmSign: 'Confirmar signatura',
+    cancelSign: 'Cancel·lar signatura',
     pleCardPay: 'Si us plau, pagueu amb targeta!',
     pleConfirmSign: 'Si us plau, confirmeu la signatura!',
     paySuccess: 'Pagament amb èxit!',

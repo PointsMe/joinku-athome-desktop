@@ -294,6 +294,7 @@ export default {
     cardPay: '刷卡支付',
     cancelPay: '取消支付',
     confirmSign: '确认签名',
+    cancelSign: '取消签名',
     pleCardPay: '请刷卡支付！',
     pleConfirmSign: '请确认签名！',
     paySuccess: '支付成功!',
