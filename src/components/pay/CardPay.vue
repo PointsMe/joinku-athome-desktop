@@ -19,14 +19,14 @@
                     <el-button
                         type="primary"
                         :disabled="disabled"
-                        @click="paySign(true)">
+                        @click="changePaySignState(true)">
                         {{ $t('confirmSign') }}
                     </el-button>
                 </div>
                 <div class="btn" v-if="payStatus === 'SignatureVerificationRequired'">
                     <el-button
                         :disabled="disabled"
-                        @click="paySign(false)">
+                        @click="changePaySignState(false)">
                         {{ $t('cancelSign') }}
                     </el-button>
                 </div>
@@ -45,15 +45,15 @@
 <script>
 /**
  * payStatus 支付状态
- * InitiateRequested: 发起支付    Initiated: 已发起    Authorized: 已授权     Canceled: 已取消    签名验证通过: SignatureVerificationAccepted
- * SignatureVerificationRejected: 签名验证拒绝      SignatureVerificationRequired: 需要签名验证     Expired: 已过期     Declined: 已拒绝
+ * InitiateRequested: 发起支付    Initiated: 已发起    Authorized: 已授权   SignatureVerificationRequired: 需要签名验证   签名验证通过: SignatureVerificationAccepted
+ * Captured: 支付成功
+ * Canceled: 已取消   SignatureVerificationRejected: 签名验证拒绝    Expired: 已过期     Declined: 已拒绝
  */
 import {
     cancelPaySession,
     confirmPaySign,
-    createPaySession,
     queryPayResult,
-} from "@/api";
+} from "@/api/dojo";
 
 export default {
     name: "CardPay",
@@ -124,20 +124,19 @@ export default {
     
         // 取消支付会话
         endPaySession () {
-            let params = {
-                paySessionId: this.paySessionId,
-                paymentIntentId: this.paymentIntentId,
-            }
             this.disabled = true
-            cancelPaySession(params).then(res => {
-                if(res.code === 20000){
-                    this.finalStatus = 102
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
+            cancelPaySession(this.paySessionId).then(res => {
+                this.finalStatus = 102
+                if (!res || !res.status) return
+                this.payStatus = res.status
+                if (res.status === 'CancelRequested') {
+                    if (this.timer) {
+                        clearInterval(this.timer)
+                        this.timer = null
+                    }
+                    setTimeout(() => {
+                        this.dialogVisible = false
+                    }, 1000)
                 }
             }).catch(error => {
                 this.$message.error(error);
@@ -147,24 +146,27 @@ export default {
         },
     
         // 确认支付签名
-        paySign (b) {
+        changePaySignState (b) {
             let params = {
-                paySessionId: this.paySessionId,
-                paymentIntentId: this.paymentIntentId,
                 accepted: b
             }
             this.disabled = true
-            confirmPaySign(params).then(res => {
-                if(res.code === 20000){
-                    if (!b) {
-                        this.finalStatus = 102
+            confirmPaySign(this.paySessionId, params).then(res => {
+                if (!b) {
+                    this.finalStatus = 102
+                }
+                if (!res || !res.status) return
+                this.payStatus = res.status
+                if (res.status === 'Captured') {
+                    this.finalStatus = 101
+                    if (this.timer) {
+                        clearInterval(this.timer)
+                        this.timer = null
                     }
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
+                    setTimeout(() => {
+                        this.$emit('parent-update')
+                        this.dialogVisible = false
+                    }, 1000)
                 }
             }).catch(error => {
                 this.$message.error(error);
@@ -184,42 +186,32 @@ export default {
         },
         // 支付结果查询
         getPayResult () {
-            let params = {
-                paySessionId: this.paySessionId
-            }
-            queryPayResult(params).then(res => {
-                if(res.code === 20000){
-                    const status = res.data.status
-                    this.payStatus = status
-                    // 最终状态
-                    if (status === 'Captured') {
-                        this.finalStatus = 101
-                        if (this.timer) {
-                            clearInterval(this.timer)
-                            this.timer = null
-                        }
-                        setTimeout(() => {
-                            this.$emit('parent-update')
-                            this.dialogVisible = false
-                        }, 1000)
-                    } else if (status === 'CancelRequested' || status === 'Canceled' || status === 'Expired' || status === 'Declined') {
-                        this.finalStatus = 102
-                        if (this.timer) {
-                            clearInterval(this.timer)
-                            this.timer = null
-                        }
-                        setTimeout(() => {
-                            this.dialogVisible = false
-                        }, 1000)
-                    } else {
-                        this.finalStatus = 100
+            queryPayResult(this.paySessionId).then(res => {
+                if (!res) return
+                const status = res.status
+                this.payStatus = status
+                // 最终状态
+                if (status === 'Captured') {
+                    this.finalStatus = 101
+                    if (this.timer) {
+                        clearInterval(this.timer)
+                        this.timer = null
                     }
+                    setTimeout(() => {
+                        this.$emit('parent-update')
+                        this.dialogVisible = false
+                    }, 1000)
+                } else if (status === 'CancelRequested' || status === 'Canceled' || status === 'Expired' || status === 'Declined') {
+                    this.finalStatus = 102
+                    if (this.timer) {
+                        clearInterval(this.timer)
+                        this.timer = null
+                    }
+                    setTimeout(() => {
+                        this.dialogVisible = false
+                    }, 1000)
                 } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
+                    this.finalStatus = 100
                 }
             }).catch(error => {
                 this.$message.error(error);

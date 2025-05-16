@@ -21,7 +21,7 @@ import LayoutAside from "@/components/layout/LayoutAside";
 // 密码
 import Password from "@/components/more/Password";
 import {mapMutations, mapState} from "vuex";
-import {queryOrderPaymode} from "@/api";
+import {queryDojoConfig, queryOrderPaymode} from "@/api";
 
 export default {
     name: "Layout",
@@ -52,7 +52,7 @@ export default {
     },
     // 方法集合
     methods: {
-        ...mapMutations(['saveRouteName', 'savePaymodes', 'saveLayoutAside']),
+        ...mapMutations(['saveRouteName', 'savePaymodes', 'saveLayoutAside', 'saveDojoConfig']),
         
         // 获取订单支付方式
         getOrderPaymode () {
@@ -60,6 +60,40 @@ export default {
                 if (Number(res.code) === 20000) {
                     const paymodes = res.data || []
                     this.savePaymodes(paymodes)
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: res.msg,
+                        type: 'error'
+                    })
+                }
+            }).catch(err => {
+                this.$message.error(err)
+            })
+        },
+    
+        // 获取Dojo配置
+        getDojoConfig () {
+            queryDojoConfig().then(res => {
+                if (Number(res.code) === 20000) {
+                    const resData = res.data
+                    if (!resData) {
+                        this.saveDojoConfig({
+                            enabled: false,
+                            apiKey: '',
+                            resellerId: '',
+                            softwareHouseId: '',
+                            version: ''
+                        })
+                        return
+                    }
+                    this.saveDojoConfig({
+                        enabled: resData.enabledDojo,
+                        apiKey: resData.dojoApiKey,
+                        resellerId: resData.dojoResellerId,
+                        softwareHouseId: resData.dojoSoftwareHouseId,
+                        version: resData.dojoVersion
+                    })
                 } else {
                     this.$message({
                         showClose: true,
@@ -132,6 +166,8 @@ export default {
     mounted() {
         // 获取订单支付方式
         this.getOrderPaymode()
+        // 获取Dojo配置
+        this.getDojoConfig()
         // 监听键盘事件
         window.addEventListener("keydown", this.handleLayoutKeydown);
     },

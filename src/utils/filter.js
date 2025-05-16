@@ -51,11 +51,27 @@ const filteFloat = (val) => {
  */
 const filterUseFloat = (val, n = 2) => {
     if (val) {
-        let value = Number(val)
-        return value.toFixed(n).replace(/\./g, ',')
+        let num = Number(val)
+        const factor = Math.pow(10, n);
+        return (Math.round(num * factor) / factor).toFixed(n).replace(/\./g, ',')
     } else {
         return 0
     }
 }
 
-export { filterDate, filterTime, filterEuropeTime, filteFloat, filterUseFloat }
+/**
+ * 使用小数
+ * @param val
+ * @returns {string|number}
+ */
+const filterSaveFloat = (val, n = 2) => {
+    if (val) {
+        let num = Number(val)
+        const factor = Math.pow(10, n);
+        return (Math.floor(num * factor) / factor).toFixed(n).replace(/\./g, ',')
+    } else {
+        return 0
+    }
+}
+
+export { filterDate, filterTime, filterEuropeTime, filteFloat, filterUseFloat, filterSaveFloat }

@@ -37,6 +37,20 @@ export default new Vuex.Store({
             payments: [],
             roundingAmount: 0
         },
+        // dojoConfig: {
+        //     enabled: true,
+        //     apiKey: 'sk_sandbox_nNMSC9JGOcJEJyVlBRCYpFJ7KR-KFoucUNvAsbqURQW6AVaW_5_KZMXGIuPqROke1PvBBRuVZDSx0VIC-maEhw',
+        //     resellerId: 'YINE',
+        //     softwareHouseId: 'YINE',
+        //     version: '2024-02-05'
+        // },
+        dojoConfig: {
+            enabled: false,
+            apiKey: '',
+            resellerId: '',
+            softwareHouseId: '',
+            version: ''
+        }
     },
     mutations: {
         // 保存本地IP
@@ -77,8 +91,13 @@ export default new Vuex.Store({
         savePrinterName(state, str) {
             state.printerName = str
         },
+        // 保存付款信息
         saveRecordPayment (state, obj) {
             state.recordPayment = obj
+        },
+        // 报错Dojo配置
+        saveDojoConfig (state, obj) {
+            state.dojoConfig = obj
         }
     },
     actions: {},

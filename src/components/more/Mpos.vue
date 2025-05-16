@@ -33,7 +33,8 @@
 </template>
 
 <script>
-import {queryDojoList} from "@/api";
+import {queryDojoList} from "@/api/dojo";
+import {mapState} from "vuex";
 
 export default {
     name: "Mpos",
@@ -57,7 +58,9 @@ export default {
     },
     // 计算属性
     computed: {
-    
+        ...mapState({
+            enabledDojo: state => state.dojoConfig.enabled   // 启用Dojo
+        }),
     },
     // 监控data中的数据变化
     watch: {
@@ -72,7 +75,7 @@ export default {
         // 初始化数据
         initData () {
             this.dialogVisible = true
-            if (this.deviceOptions.length === 0) {
+            if (this.deviceOptions.length === 0 && this.enabledDojo) {
                 this.getDeviceList()
             }
             // POS机
@@ -83,21 +86,13 @@ export default {
         // 查询设备列表
         getDeviceList () {
             queryDojoList().then(res => {
-                if (res.code === 20000) {
-                    const list = res.data || []
-                    this.deviceOptions = list.map(item => {
-                        return {
-                            ...item,
-                            propertiesId: item.properties.tid
-                        }
-                    })
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
+                const list = res || []
+                this.deviceOptions = list.map(item => {
+                    return {
+                        ...item,
+                        propertiesId: item.properties.tid
+                    }
+                })
             }).catch(err => {
                 this.$message.error(err);
             })

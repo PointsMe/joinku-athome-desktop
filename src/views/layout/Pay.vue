@@ -75,7 +75,7 @@
                     </div>
                     <div class="total-item">
                         <span class="label" v-if="orderData">{{ $t('total') }}&nbsp;(€)</span>
-                        <span class="value" v-if="orderData">{{ orderData.finalAmount | filterUseFloat }}</span>
+                        <span class="value" v-if="orderData">{{ orderData.finalAmount | filterSaveFloat }}</span>
                     </div>
                 </div>
                 <div class="product-hint">

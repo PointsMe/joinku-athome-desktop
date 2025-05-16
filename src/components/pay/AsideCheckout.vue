@@ -252,19 +252,23 @@ import OrderRemark from "@/components/pay/OrderRemark";
 // 刷卡支付
 import CardPay from '@/components/pay/CardPay'
 import {mapMutations, mapState} from "vuex";
-import {Debounce, formatDot, formatFloat, formatUseFloat} from "@/utils/common";
+import {Debounce, formatFloat, formatSaveFloat, formatUseDot} from "@/utils/common";
 import {
     cancelOrderDiscount,
     cancelOrderRounding,
     checkSession,
-    createPayIntent, createPaySession,
     orderRounding,
     queryVoucherUseState
 } from "@/api";
+import {
+    createPayIntent,
+    createPaySession
+} from "@/api/dojo";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
 import {validateFloat, validateZeroFloat} from "@/utils/validate";
 import {epsonTaxPrint} from "@/utils/printer";
+import uuidv4 from 'uuid/v4';
 export default {
     name: "AsideCheckout",
     // 组件
@@ -314,9 +318,12 @@ export default {
     // 计算属性
     computed: {
         ...mapState(['paymodes', 'shopInfo', 'perms', 'userName']),
+        ...mapState({
+            enabledDojo: state => state.dojoConfig.enabled   // 启用Dojo
+        }),
         itemTotalAmount () {
             if (this.orderData) {
-                return formatUseFloat(this.orderData.itemFinalAmount + this.orderData.itemDiscountAmount, 4)
+                return formatSaveFloat(this.orderData.itemFinalAmount + this.orderData.itemDiscountAmount, 4)
             } else {
                 return 0
             }
@@ -347,8 +354,8 @@ export default {
         // 初始化付款金额
         initPayAmount () {
             if (!this.orderData) return;
-            this.finalAmount = this.orderData.finalAmount
-            this.copeAmount = formatDot(this.orderData.finalAmount)
+            this.finalAmount = formatSaveFloat(this.orderData.finalAmount)
+            this.copeAmount = formatUseDot(this.finalAmount)
             this.cashAmount = this.copeAmount
             this.cardAmount = ''
             this.bizumAmount = ''
@@ -446,18 +453,18 @@ export default {
                 this.roundingAmount = ''
                 return
             }
-            const cashAmount = formatUseFloat(this.cashAmount)
-            const cardAmount = formatUseFloat(this.cardAmount)
-            const bizumAmount = formatUseFloat(this.bizumAmount)
-            const ticketAmount = formatUseFloat(this.ticketAmount)
-            const unpaidAmount = formatUseFloat(this.unpaidAmount)
+            const cashAmount = formatSaveFloat(this.cashAmount)
+            const cardAmount = formatSaveFloat(this.cardAmount)
+            const bizumAmount = formatSaveFloat(this.bizumAmount)
+            const ticketAmount = formatSaveFloat(this.ticketAmount)
+            const unpaidAmount = formatSaveFloat(this.unpaidAmount)
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
-            const finalAmount = this.orderData.finalAmount
+            const finalAmount = formatSaveFloat(this.orderData.finalAmount)
             // 找零
             const roundingAmount = cashAmount + cardAmount + bizumAmount + ticketAmount + unpaidAmount + voucherAmount - finalAmount
-            this.roundingAmount = formatUseFloat(roundingAmount)
+            this.roundingAmount = formatSaveFloat(roundingAmount)
         },
     
         // 支付框按键按下
@@ -586,7 +593,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: this.orderData.finalAmount,
+                        finalAmount: formatSaveFloat(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -636,7 +643,6 @@ export default {
             let taxAmount = taxAmountList.reduce((x, y) => {
                 return x + y;
             })
-            let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
                 printType,
                 receiptNumber,
@@ -656,9 +662,8 @@ export default {
                 itemTotalAmount: this.itemTotalAmount,
                 itemDiscountAmount: this.orderData.itemDiscountAmount,
                 orderDiscountAmount: this.orderData.orderDiscountAmount,
-                finalAmount: this.orderData.finalAmount,
+                finalAmount: formatSaveFloat(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
-                snf,
                 member: this.orderData.member,
             }
             queryPrinterList().then(res => {
@@ -737,7 +742,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: this.orderData.finalAmount,
+                        finalAmount: formatSaveFloat(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -797,7 +802,6 @@ export default {
             let taxAmount = taxAmountList.reduce((x, y) => {
                 return x + y;
             })
-            let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
                 receiptNumber,
                 name: this.shopInfo.name,
@@ -816,10 +820,9 @@ export default {
                 itemTotalAmount: this.itemTotalAmount,
                 itemDiscountAmount: this.orderData.itemDiscountAmount,
                 orderDiscountAmount: this.orderData.orderDiscountAmount,
-                finalAmount: this.orderData.finalAmount,
+                finalAmount: formatSaveFloat(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 invoiceData,
-                snf,
                 member: this.orderData.member
             }
             queryPrinterList().then(res => {
@@ -891,7 +894,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: this.orderData.finalAmount,
+                        finalAmount: formatSaveFloat(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -990,35 +993,35 @@ export default {
             if (this.cashAmount && validateFloat(this.cashAmount)) {
                 let obj = {
                     paymode: 101,
-                    amount: formatUseFloat(this.cashAmount)
+                    amount: formatSaveFloat(this.cashAmount)
                 }
                 payments.push(obj);
             }
             if (this.cardAmount && validateFloat(this.cardAmount)) {
                 let obj = {
                     paymode: 102,
-                    amount: formatUseFloat(this.cardAmount)
+                    amount: formatSaveFloat(this.cardAmount)
                 }
                 payments.push(obj);
             }
             if (this.bizumAmount && validateFloat(this.bizumAmount)) {
                 let obj = {
                     paymode: 106,
-                    amount: formatUseFloat(this.bizumAmount)
+                    amount: formatSaveFloat(this.bizumAmount)
                 }
                 payments.push(obj);
             }
             if (this.ticketAmount && validateFloat(this.ticketAmount)) {
                 let obj = {
                     paymode: 103,
-                    amount: formatUseFloat(this.ticketAmount)
+                    amount: formatSaveFloat(this.ticketAmount)
                 }
                 payments.push(obj);
             }
             if (this.unpaidAmount && validateFloat(this.unpaidAmount)) {
                 let obj = {
                     paymode: 104,
-                    amount: formatUseFloat(this.unpaidAmount)
+                    amount: formatSaveFloat(this.unpaidAmount)
                 }
                 payments.push(obj);
             }
@@ -1035,7 +1038,7 @@ export default {
                 })
                 let obj = {
                     paymode: 105,
-                    amount: formatUseFloat(voucherAmount)
+                    amount: formatSaveFloat(voucherAmount)
                 }
                 payments.push(obj);
             }
@@ -1188,18 +1191,18 @@ export default {
                     break;
             }
             if (!this.checkPayments()) return ''
-            const cashAmount = formatUseFloat(this.cashAmount)
-            const cardAmount = formatUseFloat(this.cardAmount)
-            const bizumAmount = formatUseFloat(this.bizumAmount)
-            const ticketAmount = formatUseFloat(this.ticketAmount)
-            const unpaidAmount = formatUseFloat(this.unpaidAmount)
+            const cashAmount = formatSaveFloat(this.cashAmount)
+            const cardAmount = formatSaveFloat(this.cardAmount)
+            const bizumAmount = formatSaveFloat(this.bizumAmount)
+            const ticketAmount = formatSaveFloat(this.ticketAmount)
+            const unpaidAmount = formatSaveFloat(this.unpaidAmount)
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
-            const finalAmount = this.orderData.finalAmount
+            const finalAmount = formatSaveFloat(this.orderData.finalAmount)
             // 剩余金额
             const roundingAmount = finalAmount - cashAmount - cardAmount - bizumAmount - ticketAmount - unpaidAmount - voucherAmount
-            return formatUseFloat(roundingAmount)
+            return formatSaveFloat(roundingAmount)
         },
     
         // 抹零
@@ -1237,9 +1240,9 @@ export default {
             }
             // pos机ID
             const posId = localStorage.getItem("posId")
-            if (this.cardAmount && formatUseFloat(this.cardAmount) > 0 && !!posId) {
+            if (this.cardAmount && formatSaveFloat(this.cardAmount) > 0 && this.enabledDojo && !!posId) {
                 this.receiptType = type
-                const amount = formatUseFloat(this.cardAmount)
+                const amount = formatSaveFloat(this.cardAmount)
                 this.startPosPay(amount)
                 return;
             }
@@ -1257,43 +1260,46 @@ export default {
         // 发起支付意图
         startPosPay (amount) {
             let params = {
-                amount
+                captureMode: 'Auto',
+                amount: {
+                    value: amount * 100,
+                    currencyCode: 'EUR'
+                },
+                reference: uuidv4(),
+                description: uuidv4()
             }
+            this.posAmount = amount
+            this.preDisabled = true
             createPayIntent(params).then(res => {
-                if (res.code === 20000) {
-                    this.posAmount = amount
-                    this.paymentIntentId = res.data.id
-                    this.startPaySession()
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
+                if (!res || !res.id) return
+                this.paymentIntentId = res.id
+                this.startPaySession()
             }).catch(err => {
                 this.$message.error(err);
+            }).finally(() => {
+                this.preDisabled = false
             })
         },
         // 创建支付会话
         startPaySession () {
             let params = {
                 terminalId: localStorage.getItem("posId"),
-                paymentIntentId: this.paymentIntentId
-            }
-            createPaySession(params).then(res => {
-                if(res.code === 20000){
-                    this.paySessionId = res.data.id
-                    this.posPayDialog = true
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
+                details: {
+                    sale: {
+                        paymentIntentId: this.paymentIntentId
+                    },
+                    sessionType: 'Sale'
                 }
+            }
+            this.preDisabled = true
+            createPaySession(params).then(res => {
+                if (!res || !res.id) return
+                this.paySessionId = res.id
+                this.posPayDialog = true
             }).catch(error => {
                 this.$message.error(error);
+            }).finally(() => {
+                this.preDisabled = false
             })
         },
         

@@ -44,7 +44,7 @@ export const formatFloat = (str) => {
 }
 
 /**
- * 保留小数
+ * 使用小数
  * @param val
  * @returns {string|number}
  */
@@ -63,25 +63,28 @@ export const formatUseFloat = (val, n = 2) => {
  * @param val
  * @returns {string|number}
  */
-export const formatDot = (val, n = 2) => {
+export const formatUseDot = (val, n = 2) => {
     if (val || val === 0) {
-        return val.toString().replace('.', ',');
+        let num = Number(val)
+        const factor = Math.pow(10, n);
+        return (Math.round(num * factor) / factor).toFixed(n).replace('.', ',')
     } else {
         return ''
     }
 }
 
 /**
- * 保留小数使用逗号
+ * 保留小数  (只保留后 n 位)
  * @param val
  * @returns {string|number}
  */
-export const formatUseDot = (val) => {
-    if (val || val === 0) {
-        let value = Number(val)
-        return value.toFixed(2).replace('.', ',')
+export const formatSaveFloat = (val, n = 2) => {
+    if (val) {
+        const num = Number(val.toString().replace(',', '.'))
+        const factor = Math.pow(10, n);
+        return Math.floor(num * factor) / factor;
     } else {
-        return ''
+        return 0
     }
 }
 

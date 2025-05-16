@@ -195,7 +195,7 @@
 
 import {createRefundOrder, queryOrderDetail, updateOrderReceipt} from "@/api";
 import {validateFloat, validateInteger} from "@/utils/validate";
-import {formatFloat} from "@/utils/common";
+import {formatFloat, formatSaveFloat} from "@/utils/common";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
 import {mapMutations, mapState} from "vuex";
@@ -295,7 +295,7 @@ export default {
                     this.itemDiscountAmount = res.data.itemDiscountAmount
                     this.orderDiscountAmount = res.data.orderDiscountAmount
                     this.totalDiscountAmount = res.data.totalDiscountAmount
-                    this.finalAmount = res.data.finalAmount
+                    this.finalAmount = formatSaveFloat(res.data.finalAmount)
                     this.remark = res.data.remark
                     this.payments = res.data.payments || []
                     this.paidAmount = res.data.paidAmount
@@ -344,7 +344,7 @@ export default {
                         this.itemDiscountAmount = res.data.itemDiscountAmount
                         this.orderDiscountAmount = res.data.orderDiscountAmount
                         this.totalDiscountAmount = res.data.totalDiscountAmount
-                        this.finalAmount = res.data.finalAmount
+                        this.finalAmount = formatSaveFloat(res.data.finalAmount)
                         this.remark = res.data.remark
                         this.payments = res.data.payments || []
                         this.paidAmount = res.data.paidAmount
@@ -548,7 +548,6 @@ export default {
             let taxAmount = taxAmountList.reduce((x, y) => {
                 return x + y;
             })
-            let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
                 printType,
                 receiptNumber: this.receiptNumber,
@@ -570,7 +569,6 @@ export default {
                 orderDiscountAmount: this.orderDiscountAmount,
                 finalAmount: this.finalAmount,
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
-                snf,
                 member: this.member
             }
             queryPrinterList().then(res => {
@@ -787,7 +785,6 @@ export default {
             let taxAmount = taxAmountList.reduce((x, y) => {
                 return x + y;
             })
-            let snf = localStorage.getItem('snf').padStart(4, '0')
             let printData = {
                 receiptNumber: this.receiptNumber,
                 name: this.shopInfo.name,
@@ -809,7 +806,6 @@ export default {
                 finalAmount: this.finalAmount,
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 invoiceData,
-                snf,
                 member: this.member
             }
             queryPrinterList().then(res => {

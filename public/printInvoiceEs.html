@@ -130,21 +130,6 @@
 <script>
     //引入ipcRenderer对象
     const {ipcRenderer} = require('electron')
-    function randomWord(randomFlag, min, max){
-        let str = "",
-                range = min,
-                arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-        
-        // 随机产生
-        if(randomFlag){
-            range = Math.round(Math.random() * (max-min)) + min;
-        }
-        for(let i=0; i<range; i++){
-            pos = Math.round(Math.random() * (arr.length-1));
-            str += arr[pos];
-        }
-        return str;
-    }
     
     //监听渲染线程传过来的 webview-print-render事件 printTemplate
     ipcRenderer.on('webview-print-render', (event, data) => {
@@ -272,22 +257,22 @@
                         '</p>'
             } else if (data.payments[i].paymode === 103) {
                 html += '<p class="row">' +
-                        '<span>Vale de comida</span>'+
+                        '<span>Ticket restaurante</span>'+
                         '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
                         '</p>'
             } else if (data.payments[i].paymode === 105) {
                 html += '<p class="row">' +
-                        '<span>Cupón</span>'+
+                        '<span>Cupón de descuento</span>'+
                         '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
                         '</p>'
             } else if (data.payments[i].paymode === 104) {
                 html += '<p class="row">' +
-                        '<span>No pagado</span>'+
+                        '<span>SIN PAGAR</span>'+
                         '<span>' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
                         '</p>'
             } else if (data.payments[i].paymode === 0) {
                 html += '<p class="row">' +
-                        '<span>Cambio</span>'+
+                        '<span>Dar Cambio</span>'+
                         '<span>-' + data.payments[i].amount.toFixed(2).replace('.', ',') + '€</span>'+
                         '</p>'
             }

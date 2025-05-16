@@ -73,7 +73,6 @@ export default {
     data() {
         return {
             keepList: [],
-            snfTimer: null
         }
     },
     // 计算属性
@@ -85,45 +84,12 @@ export default {
             // 设置路由
             createMenu()
         }
-        // 开始snf定时器
-        this.startSnfTimer();//轮询完成当天
     },
     mounted() {
         // 初始化打印业务
         this.initPrint()
     },
     methods: {
-        // 开始snf定时器
-        startSnfTimer () {
-            let preprintDate = localStorage.getItem('preprintDate')
-            let currentDate = moment().format('YYYY-MM-DD')
-            let snf = localStorage.getItem('snf')
-            if (localStorage.getItem('snf')) {
-                if (preprintDate === currentDate) {
-                    localStorage.setItem('snf', snf);
-                } else {
-                    localStorage.setItem('snf', '1');
-                    localStorage.setItem('preprintDate', currentDate);
-                }
-            } else {
-                localStorage.setItem('snf', '1');
-            }
-            if (this.snfTimer) {
-                clearInterval(this.snfTimer)
-            }
-            this.snfTimer = setInterval(() => {
-                this.getCurrentDay()
-            }, 1000)
-        },
-        getCurrentDay() {
-            let preprintDate = localStorage.getItem('preprintDate')
-            let currentDate = moment().format('YYYY-MM-DD')
-            if (preprintDate !== currentDate) {
-                localStorage.setItem('snf', '1');
-                localStorage.setItem('preprintDate', currentDate);
-            }
-        },
-        
         // 初始化打印业务
         initPrint() {
             // 预打单（意大利）
@@ -137,7 +103,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -155,7 +121,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -173,7 +139,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -191,7 +157,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -209,7 +175,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -227,7 +193,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -246,7 +212,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -264,7 +230,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -282,7 +248,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -300,7 +266,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -318,7 +284,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -336,7 +302,7 @@ export default {
                             deviceName: this.printerName, //打印机名称
                         })
                         .then((res) => {
-                            localStorage.setItem('snf', Number(localStorage.getItem('snf')) + 1);
+                            console.log('ok')
                         })
                         .catch((err) => {
                             console.log(err)
@@ -590,9 +556,7 @@ export default {
     },
     // 销毁之前
     beforeDestroy() {
-        if (this.snfTimer) {
-            clearInterval(this.snfTimer)
-        }
+    
     }
 };
 </script>

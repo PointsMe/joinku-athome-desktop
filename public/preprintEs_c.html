@@ -178,20 +178,20 @@
             html += '<div class="dishes-row">' +
                     '<p class="name">' + data.items[i].name + '</p>' +
                     '<p class="desc">'
-            if (data.items[i].code) {
-                html += '<span class="code align-l">' + data.items[i].code + '</span>'
-            } else {
-                html += '<span class="code align-l"></span>'
-            }
+                    if (data.items[i].code) {
+                        html += '<span class="code align-l">' + data.items[i].code + '</span>'
+                    } else {
+                        html += '<span class="code align-l"></span>'
+                    }
             html += '<span  class="count align-c">' + data.items[i].count + '</span>'
-            if (data.items[i].originalPrice !== data.items[i].finalPrice) {
-                html += '<span class="price align-c">' +
-                        '<del>' + data.items[i].originalPrice.toFixed(2).replace('.', ',') + '€</del>' +
-                        '<i>' + data.items[i].finalPrice.toFixed(2).replace('.', ',') + '€</i>' +
-                        '</span>'
-            } else {
-                html += '<span class="price align-c">' + data.items[i].finalPrice.toFixed(2).replace('.', ',') + '€</span>'
-            }
+                    if (data.items[i].originalPrice !== data.items[i].finalPrice) {
+                        html += '<span class="price align-c">' +
+                                '<del>' + data.items[i].originalPrice.toFixed(2).replace('.', ',') + '€</del>' +
+                                '<i>' + data.items[i].finalPrice.toFixed(2).replace('.', ',') + '€</i>' +
+                                '</span>'
+                    } else {
+                        html += '<span class="price align-c">' + data.items[i].finalPrice.toFixed(2).replace('.', ',') + '€</span>'
+                    }
             html += '<span class="total align-r">' + data.items[i].finalAmount.toFixed(2).replace('.', ',') + '€</span>' +
                     '</p>' +
                     '</div>';
