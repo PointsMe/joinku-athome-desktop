@@ -236,6 +236,7 @@
             :showDialog="posPayDialog"
             :posAmount="posAmount"
             :paymentIntentId="paymentIntentId"
+            :paySessionId="paySessionId"
             @parent-update="posPaySuccess"
             @parent-close="posPayDialog = false"/>
     </div>
@@ -256,7 +257,7 @@ import {
     cancelOrderDiscount,
     cancelOrderRounding,
     checkSession,
-    createPayIntent,
+    createPayIntent, createPaySession,
     orderRounding,
     queryVoucherUseState
 } from "@/api";
@@ -305,7 +306,8 @@ export default {
             isAuto: true,
             receiptType: 100,   // 票据类型  100：待开发票  101：税票   102：发票
             posAmount: 0,
-            paymentIntentId: '',
+            paymentIntentId: '',   // 支付意图ID
+            paySessionId: '',   // 支付会话ID
             posPayDialog: false,
         };
     },
@@ -1247,7 +1249,7 @@ export default {
             } else if (type === 101) {
                 // 税票
                 this.taxCheck()
-            } else if (type === 103) {
+            } else if (type === 102) {
                 // 发票
                 this.cellInvoice()
             }
@@ -1261,7 +1263,7 @@ export default {
                 if (res.code === 20000) {
                     this.posAmount = amount
                     this.paymentIntentId = res.data.id
-                    this.posPayDialog = true
+                    this.startPaySession()
                 } else {
                     this.$message({
                         showClose: true,
@@ -1271,6 +1273,27 @@ export default {
                 }
             }).catch(err => {
                 this.$message.error(err);
+            })
+        },
+        // 创建支付会话
+        startPaySession () {
+            let params = {
+                terminalId: localStorage.getItem("posId"),
+                paymentIntentId: this.paymentIntentId
+            }
+            createPaySession(params).then(res => {
+                if(res.code === 20000){
+                    this.paySessionId = res.data.id
+                    this.posPayDialog = true
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: res.msg,
+                        type: 'error'
+                    })
+                }
+            }).catch(error => {
+                this.$message.error(error);
             })
         },
         

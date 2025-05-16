@@ -71,13 +71,16 @@ export default {
         paymentIntentId: {
             type: String,
             default: ''
+        },
+        paySessionId: {
+            type: String,
+            default: ''
         }
     },
     data() {
         return {
             dialogVisible: false,
             timer: null,
-            paySessionId: '',
             payStatus: '',
             finalStatus: 100,   // 100: 支付中     101: 支付成功   102: 支付失败
             disabled: false
@@ -113,35 +116,17 @@ export default {
         initData () {
             this.dialogVisible = true
             this.finalStatus = 100
-            this.startPaySession()
-        },
-    
-        // 创建支付会话
-        startPaySession () {
-            let params = {
-                terminalId: localStorage.getItem("posId"),
-                paymentIntentId: this.paymentIntentId
-            }
-            createPaySession(params).then(res => {
-                if(res.code === 20000){
-                    this.paySessionId = res.data.id
-                    this.startTimer()
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
-            }).catch(error => {
-                this.$message.error(error);
-            })
+            this.startTimer()
+            setTimeout(() => {
+                this.endTimer()
+            }, 81000)
         },
     
         // 取消支付会话
         endPaySession () {
             let params = {
-                paySessionId: this.paySessionId
+                paySessionId: this.paySessionId,
+                paymentIntentId: this.paymentIntentId,
             }
             this.disabled = true
             cancelPaySession(params).then(res => {
@@ -165,6 +150,7 @@ export default {
         paySign (b) {
             let params = {
                 paySessionId: this.paySessionId,
+                paymentIntentId: this.paymentIntentId,
                 accepted: b
             }
             this.disabled = true
@@ -218,6 +204,10 @@ export default {
                         }, 1000)
                     } else if (status === 'CancelRequested' || status === 'Canceled' || status === 'Expired' || status === 'Declined') {
                         this.finalStatus = 102
+                        if (this.timer) {
+                            clearInterval(this.timer)
+                            this.timer = null
+                        }
                         setTimeout(() => {
                             this.dialogVisible = false
                         }, 1000)
@@ -234,6 +224,19 @@ export default {
             }).catch(error => {
                 this.$message.error(error);
             })
+        },
+     
+        // 结束定时器
+        endTimer () {
+            if (!this.dialogVisible) return
+            if (this.timer) {
+                clearInterval(this.timer)
+                this.timer = null
+            }
+            this.finalStatus = 102
+            setTimeout(() => {
+                this.dialogVisible = false
+            }, 1000)
         },
         
         // 关闭弹窗
