@@ -375,11 +375,45 @@ export default {
         // 初始化数据
         initData () {
             this.dialogVisible = true
+            this.formData = {
+                type: 101,
+                username: '',      // 名称
+                remarkName: '',    // 别名
+                mobile: '',        // 电话
+                email: '',
+                number: '',
+                gender: '',        // 性别
+                birthday: '',      // 生日
+                level: '',
+                vatNumber: '',
+                taxCode: '',
+                avatar: '',
+                enabled: true,
+                country: '',
+                province: '',
+                city: '',
+                zipcode: '',
+                address: '',
+                houseNumber: '',
+                contactName: '',
+                contactPhone: '',
+                bankCard: '',    // 银行卡号
+                enabledIva: false,   // 增值税
+                enabledReq: false,   // 附加税（西班牙商家）
+                taxRateTypeId: '',  // 增值税ID
+                discountRate: '',     // 折扣
+                defaultPriceType: 100,   // 默认价格类型
+                receiptCode: '',    // 发票码
+                receiptEmail: ''   // 法定邮箱
+            }
+            this.addressId = ''
+            this.settleSettingId = ''
             if (this.itemId) {
                 this.dialogTitle = this.$t('editMember')
                 this.getDetail()
             } else {
                 this.dialogTitle = this.$t('addMember')
+                
             }
             // 获取等级
             if (this.levelOptions.length === 0) {
@@ -440,8 +474,8 @@ export default {
                         receiptCode: resData.settleSetting.receiptCode,    // 发票码
                         receiptEmail: resData.settleSetting.receiptEmail   // 法定邮箱
                     };
-                    this.addressId = resData.address.id
-                    this.settleSettingId = resData.settleSetting.id
+                    this.addressId = resData.address.id || ''
+                    this.settleSettingId = resData.settleSetting.id || ''
                 } else {
                     this.$message({
                         showClose: true,
