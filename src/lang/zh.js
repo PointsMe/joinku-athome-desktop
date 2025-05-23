@@ -299,6 +299,8 @@ export default {
     pleConfirmSign: '请确认签名！',
     paySuccess: '支付成功!',
     payFail: '支付失败!',
+    mposDisable: 'POS机不可用！',
+    mposInuseHint: 'POS机正在使用，请稍后再试！',
     route: {
         cashier: '收银',
         order: '订单',

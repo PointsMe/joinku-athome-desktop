@@ -299,6 +299,8 @@ export default {
     pleConfirmSign: 'Bitte Unterschrift bestätigen!',
     paySuccess: 'Zahlung erfolgreich!',
     payFail: 'Zahlung fehlgeschlagen!',
+    mposDisable: 'POS-Gerät nicht verfügbar!',
+    mposInuseHint: 'Das POS-Gerät wird gerade verwendet, bitte versuchen Sie es später erneut!',
     route: {
         cashier: 'Kasse',
         order: 'Bestellung',

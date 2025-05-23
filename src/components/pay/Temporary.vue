@@ -78,7 +78,7 @@ export default {
             formData: {
                 name: this.$t('tempoProduct'),
                 price: '',
-                taxRate: '21'
+                taxRate: ''
             },
             rules: {
                 // name: [
@@ -113,6 +113,11 @@ export default {
         // 初始化数据
         initData () {
             this.dialogVisible = true
+            if (this.companyCountry === 'ES'){
+                this.formData.taxRate = 21
+            } else {
+                this.formData.taxRate = 22
+            }
             this.$nextTick(() => {
                 this.$refs.priceRef.$el.querySelector('input').focus();
             })
@@ -186,7 +191,6 @@ export default {
                     label: '0%'
                 }
             ]
-            this.formData.taxRate = 21
         } else {
             this.taxRateOptions = [
                 {
@@ -206,7 +210,6 @@ export default {
                     label: '0%'
                 }
             ]
-            this.formData.taxRate = 22
         }
     },
     // 组件被激活

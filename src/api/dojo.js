@@ -32,9 +32,21 @@ http.interceptors.response.use(function(response) {
  * @param params
  * @returns {*}
  */
-export const queryDojoList = () => {
+export const queryTerminalList = () => {
     return http({
         url: '/terminals?statuses=Available',
+        method: 'get'
+    })
+}
+
+/**
+ * 获取终端状态
+ * @param params
+ * @returns {*}
+ */
+export const queryTerminalStatus = (terminalId) => {
+    return http({
+        url: `/terminals/${terminalId}`,
         method: 'get'
     })
 }

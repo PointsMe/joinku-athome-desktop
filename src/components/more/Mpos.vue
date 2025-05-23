@@ -33,7 +33,7 @@
 </template>
 
 <script>
-import {queryDojoList} from "@/api/dojo";
+import {queryTerminalList} from "@/api/dojo";
 import {mapState} from "vuex";
 
 export default {
@@ -85,7 +85,7 @@ export default {
         },
         // 查询设备列表
         getDeviceList () {
-            queryDojoList().then(res => {
+            queryTerminalList().then(res => {
                 const list = res || []
                 this.deviceOptions = list.map(item => {
                     return {

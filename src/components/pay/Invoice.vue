@@ -98,6 +98,7 @@
 <script>
 
 import {queryCountryList, queryMemberDetail, queryMemberList, queryProvinceList} from '@/api'
+import {mapState} from "vuex";
 
 export default {
     name: 'Invoice',
@@ -164,7 +165,7 @@ export default {
                 zipcode: '',
                 city: '',
                 province: '',
-                country: '',
+                country: this.countryName,
                 contactPhone:'',
                 contactName:'',
                 contactEmail:'',
@@ -382,7 +383,7 @@ export default {
             }
             this.formData.name = '';
             this.formData.receiptEmail = '';
-            this.formData.country = 'IT'; // 默认意大利
+            this.formData.country = this.countryName; // 默认国家
             this.formData.city = '';
             this.formData.province = '';
             this.formData.address = '';
@@ -392,6 +393,8 @@ export default {
             this.formData.contactPhone = '';
             this.formData.contactName = '';
             this.formData.contactEmail = '';
+            this.provinceOptions = [];
+            this.countryChange(this.countryName)
         },
         
         // 获取国家
@@ -483,6 +486,9 @@ export default {
     
     },
     computed: {
+        ...mapState({
+            countryName: state => state.shopInfo.countryName   // 国家
+        }),
         nameLabel () {
             if (this.formData.type === 101 || this.formData.type === 103) {
                 return this.$t('companyName')

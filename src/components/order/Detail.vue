@@ -75,12 +75,13 @@
                                     :disabled="scope.row.disabled">
                                 </el-input>
                             </div>
+                            <span>Max:&nbsp;{{ scope.row.maxCount }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column
                         prop="amount"
                         align="center"
-                        min-width="100"
+                        min-width="110"
                         :label="$t('refundAmount')">
                         <template slot-scope="scope">
                             <div :class="{ 'input-error': !checkAmount(scope.row) }">
@@ -89,6 +90,7 @@
                                     :disabled="scope.row.disabled">
                                 </el-input>
                             </div>
+                            <span>Max:&nbsp;{{ scope.row.maxAmount }}</span>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -195,7 +197,7 @@
 
 import {createRefundOrder, queryOrderDetail, updateOrderReceipt} from "@/api";
 import {validateFloat, validateInteger} from "@/utils/validate";
-import {formatFloat, formatSaveFloat} from "@/utils/common";
+import {formatFloat, formatRetainFloat} from "@/utils/common";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
 import {mapMutations, mapState} from "vuex";
@@ -295,7 +297,7 @@ export default {
                     this.itemDiscountAmount = res.data.itemDiscountAmount
                     this.orderDiscountAmount = res.data.orderDiscountAmount
                     this.totalDiscountAmount = res.data.totalDiscountAmount
-                    this.finalAmount = formatSaveFloat(res.data.finalAmount)
+                    this.finalAmount = formatRetainFloat(res.data.finalAmount)
                     this.remark = res.data.remark
                     this.payments = res.data.payments || []
                     this.paidAmount = res.data.paidAmount
@@ -344,7 +346,7 @@ export default {
                         this.itemDiscountAmount = res.data.itemDiscountAmount
                         this.orderDiscountAmount = res.data.orderDiscountAmount
                         this.totalDiscountAmount = res.data.totalDiscountAmount
-                        this.finalAmount = formatSaveFloat(res.data.finalAmount)
+                        this.finalAmount = formatRetainFloat(res.data.finalAmount)
                         this.remark = res.data.remark
                         this.payments = res.data.payments || []
                         this.paidAmount = res.data.paidAmount
@@ -521,12 +523,14 @@ export default {
     
         // 预打
         prePressPrint (printType = 'preprint') {
+            // 商品
             let items = this.productList.map(item => {
                 return {
                     ...item,
                     count: item.finalCount
                 }
             })
+            // 税率
             let taxObj = this.taxGroupBy(items)
             let taxList = []
             let taxAmountList = []
@@ -560,7 +564,7 @@ export default {
                 taxCode: this.shopInfo.taxCode,
                 contactPhone: this.shopInfo.contactPhone,
                 operatorName: this.userName,
-                items: this.productList,
+                items,
                 taxList,
                 taxAmount,
                 payments: this.payments,
@@ -653,6 +657,7 @@ export default {
                 });
                 return
             }
+            // 商品
             let items = this.productList.map(item => {
                 return {
                     ...item,
@@ -763,7 +768,14 @@ export default {
                 taxCode: invoiceBuyer.taxCode,
                 contactPhone: invoiceBuyer.contactPhone
             }
-            // 菜品
+            // 商品
+            let items = this.productList.map(item => {
+                return {
+                    ...item,
+                    count: item.finalCount
+                }
+            })
+            // 税率
             let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
             let taxAmountList = []
@@ -796,7 +808,7 @@ export default {
                 taxCode: this.shopInfo.taxCode,
                 contactPhone: this.shopInfo.contactPhone,
                 operatorName: this.userName,
-                items: this.productList,
+                items,
                 taxList,
                 taxAmount,
                 payments: this.payments,

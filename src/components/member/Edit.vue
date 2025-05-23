@@ -413,7 +413,6 @@ export default {
                 this.getDetail()
             } else {
                 this.dialogTitle = this.$t('addMember')
-                
             }
             // 获取等级
             if (this.levelOptions.length === 0) {

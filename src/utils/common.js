@@ -78,7 +78,7 @@ export const formatUseDot = (val, n = 2) => {
  * @param val
  * @returns {string|number}
  */
-export const formatSaveFloat = (val, n = 2) => {
+export const formatRetainFloat = (val, n = 2) => {
     if (val) {
         const num = Number(val.toString().replace(',', '.'))
         const factor = Math.pow(10, n);

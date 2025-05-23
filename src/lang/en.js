@@ -299,6 +299,8 @@ export default {
     pleConfirmSign: 'Please confirm signature!',
     paySuccess: 'Payment Successful!',
     payFail: 'Payment Failed!',
+    mposDisable: 'POS is unavailable!',
+    mposInuseHint: 'The POS is in use, please try again later!',
     route: {
         cashier: 'Cashier',
         order: 'Order',

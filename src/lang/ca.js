@@ -299,6 +299,8 @@ export default {
     pleConfirmSign: 'Si us plau, confirmeu la signatura!',
     paySuccess: 'Pagament amb èxit!',
     payFail: 'El pagament ha fallat!',
+    mposDisable: 'El TPV no està disponible!',
+    mposInuseHint: 'El TPV està en ús, torna-ho a provar més tard!',
     route: {
         cashier: 'Caixer',
         order: 'Comanda',
