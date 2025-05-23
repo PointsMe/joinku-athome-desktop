@@ -165,7 +165,7 @@ export default {
                 zipcode: '',
                 city: '',
                 province: '',
-                country: this.countryName,
+                country: '',
                 contactPhone:'',
                 contactName:'',
                 contactEmail:'',
