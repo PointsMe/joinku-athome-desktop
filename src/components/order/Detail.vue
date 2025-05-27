@@ -273,36 +273,7 @@ export default {
             }
             queryOrderDetail(params).then(res => {
                 if (res.code === 20000) {
-                    this.receipt = res.data.receipt
-                    this.receiptNumber = res.data.receiptNumber || ''
-                    const items = res.data.items || []
-                    this.productList = items.map(item => {
-                        let maxCount = item.finalCount - item.refundCount
-                        let maxAmount = item.settleAmount - item.refundAmount
-                        let disabled = item.refundCount >= item.finalCount
-                        return {
-                            ...item,
-                            maxCount,
-                            disabled,
-                            count: maxCount,
-                            maxAmount,
-                            amount: item.settleAmount - item.refundAmount,
-                        }
-                    })
-                    this.number = res.data.number
-                    this.createdAt = res.data.createdAt
-                    this.member = res.data.member
-                    this.operatorName = res.data.operator ? res.data.operator.username : ''
-                    this.itemTotalAmount = res.data.itemTotalAmount
-                    this.itemDiscountAmount = res.data.itemDiscountAmount
-                    this.orderDiscountAmount = res.data.orderDiscountAmount
-                    this.totalDiscountAmount = res.data.totalDiscountAmount
-                    this.finalAmount = formatRetainFloat(res.data.finalAmount)
-                    this.remark = res.data.remark
-                    this.payments = res.data.payments || []
-                    this.paidAmount = res.data.paidAmount
-                    this.enablePreprint = res.data.cashierSetting.enablePreprint
-                    this.enableAliasPrint = res.data.cashierSetting.enableAliasPrint
+                    this.disposeOrderData(res.data)
                 } else {
                     this.$message({
                         showClose: true,
@@ -322,36 +293,7 @@ export default {
                 }
                 queryOrderDetail(params).then(res => {
                     if (res.code === 20000) {
-                        this.receipt = res.data.receipt
-                        this.receiptNumber = res.data.receiptNumber || ''
-                        const items = res.data.items || []
-                        this.productList = items.map(item => {
-                            let maxCount = item.finalCount - item.refundCount
-                            let maxAmount = item.settleAmount - item.refundAmount
-                            let disabled = item.refundCount >= item.finalCount
-                            return {
-                                ...item,
-                                maxCount,
-                                disabled,
-                                count: maxCount,
-                                maxAmount,
-                                amount: item.settleAmount - item.refundAmount,
-                            }
-                        })
-                        this.number = res.data.number
-                        this.createdAt = res.data.createdAt
-                        this.member = res.data.member
-                        this.operatorName = res.data.operator ? res.data.operator.username : ''
-                        this.itemTotalAmount = res.data.itemTotalAmount
-                        this.itemDiscountAmount = res.data.itemDiscountAmount
-                        this.orderDiscountAmount = res.data.orderDiscountAmount
-                        this.totalDiscountAmount = res.data.totalDiscountAmount
-                        this.finalAmount = formatRetainFloat(res.data.finalAmount)
-                        this.remark = res.data.remark
-                        this.payments = res.data.payments || []
-                        this.paidAmount = res.data.paidAmount
-                        this.enablePreprint = res.data.cashierSetting.enablePreprint
-                        this.enableAliasPrint = res.data.cashierSetting.enableAliasPrint
+                        this.disposeOrderData(res.data)
                         resolve()
                     } else {
                         this.$message({
@@ -366,6 +308,65 @@ export default {
                     reject()
                 })
             });
+        },
+        // 处理订单数据
+        disposeOrderData (data) {
+            this.receipt = data.receipt
+            this.receiptNumber = data.receiptNumber || ''
+            const items = data.items || []
+            this.productList = items.map(item => {
+                let maxCount = item.finalCount - item.refundCount
+                let maxAmount = item.settleAmount - item.refundAmount
+                let disabled = item.refundCount >= item.finalCount
+                let discounts = item.discounts || []
+                let ruleDiscount = discounts.find(discount => discount.type === 104)
+                let ifRuleDiscountItem = false
+                let prices = []
+                let normalCount = item.finalCount
+                if (ruleDiscount !== undefined && ruleDiscount.amount > 0) {
+                    ifRuleDiscountItem = true
+                    const amounts = ruleDiscount.amounts ? ruleDiscount.amounts.split(',') : []
+                    const arr1 = Array(item.finalCount).fill(item.finalPrice)
+                    normalCount = item.finalCount - amounts.length
+                    prices = this.subtractFromArray(arr1, amounts)
+                }
+                return {
+                    ...item,
+                    maxCount,
+                    disabled,
+                    count: maxCount,
+                    maxAmount,
+                    amount: item.settleAmount - item.refundAmount,
+                    ifRuleDiscountItem,
+                    normalCount,
+                    prices
+                }
+            })
+            this.number = data.number
+            this.createdAt = data.createdAt
+            this.member = data.member
+            this.operatorName = data.operator ? data.operator.username : ''
+            this.itemTotalAmount = data.itemTotalAmount
+            this.itemDiscountAmount = data.itemDiscountAmount
+            this.orderDiscountAmount = data.orderDiscountAmount
+            this.totalDiscountAmount = data.totalDiscountAmount
+            this.finalAmount = formatRetainFloat(data.finalAmount)
+            this.remark = data.remark
+            this.payments = data.payments || []
+            this.paidAmount = data.paidAmount
+            this.enablePreprint = data.cashierSetting.enablePreprint
+            this.enableAliasPrint = data.cashierSetting.enableAliasPrint
+        },
+        // 折扣价格
+        subtractFromArray (arr1, arr2) {
+            const result = [...arr1];
+            let len1 = result.length;
+            let len2 = arr2.length;
+            for (let i = 0; i < len2; i++) {
+                let index = len1 - len2 + i;
+                result[index] = formatRetainFloat(result[index] - arr2[i])
+            }
+            return result;
         },
         
         // 是否可勾选
@@ -494,7 +495,7 @@ export default {
                         let webview = document.querySelector('#printBarcodeDe')
                         webview.send('webview-print-render', printData)
                     } else if (this.shopInfo.countryCode === 'ES' || this.shopInfo.countryCode === 'CA') {
-                        const webview = document.querySelector('#printBarcodeEs');
+                        let webview = document.querySelector('#printBarcodeEs');
                         webview.send('webview-print-render', printData); //将数据发送至webview
                     } else {
                         let webview = document.querySelector('#printBarcodeEn')
@@ -524,12 +525,42 @@ export default {
         // 预打
         prePressPrint (printType = 'preprint') {
             // 商品
-            let items = this.productList.map(item => {
-                return {
-                    ...item,
-                    count: item.finalCount
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    if (item.normalCount > 0) {
+                        items.push({
+                            ...item,
+                            finalPrice: item.prices[0],
+                            settlePrice: item.prices[0],
+                            count: item.normalCount,
+                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                        })
+                
+                    }
+                    for (let i=item.normalCount; i<item.prices.length; i++) {
+                        items.push({
+                            ...item,
+                            finalPrice: item.prices[i],
+                            settlePrice: item.prices[i],
+                            count: 1,
+                            finalAmount: item.prices[i]
+                        })
+                    }
+                } else {
+                    items.push({
+                        ...item,
+                        count: item.finalCount
+                    })
                 }
             })
+            // // 商品
+            // let items = this.productList.map(item => {
+            //     return {
+            //         ...item,
+            //         count: item.finalCount
+            //     }
+            // })
             // 税率
             let taxObj = this.taxGroupBy(items)
             let taxList = []
@@ -658,12 +689,41 @@ export default {
                 return
             }
             // 商品
-            let items = this.productList.map(item => {
-                return {
-                    ...item,
-                    count: item.finalCount
+            // 商品
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    if (item.normalCount > 0) {
+                        items.push({
+                            ...item,
+                            finalPrice: item.prices[0],
+                            settlePrice: item.prices[0],
+                            count: item.normalCount,
+                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                        })
+                    }
+                    for (let i=item.normalCount; i<item.prices.length; i++) {
+                        items.push({
+                            ...item,
+                            finalPrice: item.prices[i],
+                            settlePrice: item.prices[i],
+                            count: 1,
+                            finalAmount: item.prices[i]
+                        })
+                    }
+                } else {
+                    items.push({
+                        ...item,
+                        count: item.finalCount
+                    })
                 }
             })
+            // let items = this.productList.map(item => {
+            //     return {
+            //         ...item,
+            //         count: item.finalCount
+            //     }
+            // })
             let cashAmount = 0
             let cardAmount = 0
             let bizumAmount = 0
@@ -769,12 +829,42 @@ export default {
                 contactPhone: invoiceBuyer.contactPhone
             }
             // 商品
-            let items = this.productList.map(item => {
-                return {
-                    ...item,
-                    count: item.finalCount
+            // 商品
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    if (item.normalCount > 0) {
+                        items.push({
+                            ...item,
+                            finalPrice: item.prices[0],
+                            settlePrice: item.prices[0],
+                            count: item.normalCount,
+                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                        })
+                
+                    }
+                    for (let i=item.normalCount; i<item.prices.length; i++) {
+                        items.push({
+                            ...item,
+                            finalPrice: item.prices[i],
+                            settlePrice: item.prices[i],
+                            count: 1,
+                            finalAmount: item.prices[i]
+                        })
+                    }
+                } else {
+                    items.push({
+                        ...item,
+                        count: item.finalCount
+                    })
                 }
             })
+            // let items = this.productList.map(item => {
+            //     return {
+            //         ...item,
+            //         count: item.finalCount
+            //     }
+            // })
             // 税率
             let taxObj = this.taxGroupBy(this.productList)
             let taxList = []

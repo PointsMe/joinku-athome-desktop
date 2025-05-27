@@ -282,6 +282,10 @@ export default {
         orderData: {
             type: [Object, null],
             default: null
+        },
+        productList: {
+            type: Array,
+            default: () => ([])
         }
     },
     data() {
@@ -616,13 +620,44 @@ export default {
         },
         // 预打
         prePressPrint (payments, printType = 'preprint', receiptNumber = '') {
-            let items = this.orderData.items.map(item => {
-                return {
-                    ...item,
-                    originalPrice: item.sellPrice
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    if (item.normalCount > 0) {
+                        items.push({
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: item.prices[0],
+                            settlePrice: item.prices[0],
+                            count: item.normalCount,
+                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                        })
+                        
+                    }
+                    for (let i=item.normalCount; i<item.prices.length; i++) {
+                        items.push({
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: item.prices[i],
+                            settlePrice: item.prices[i],
+                            count: 1,
+                            finalAmount: item.prices[i]
+                        })
+                    }
+                } else {
+                    items.push({
+                        ...item,
+                        originalPrice: item.sellPrice
+                    })
                 }
             })
-            let taxObj = this.taxGroupBy(items)
+            // let items = this.orderData.items.map(item => {
+            //     return {
+            //         ...item,
+            //         originalPrice: item.sellPrice
+            //     }
+            // })
+            let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
             let taxAmountList = []
             for (let key in taxObj) {
@@ -775,13 +810,42 @@ export default {
                 contactPhone: invoiceBuyer.contactPhone
             }
             // 菜品
-            let items = this.orderData.items.map(item => {
-                return {
-                    ...item,
-                    originalPrice: item.sellPrice
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    if (item.normalCount > 0) {
+                        items.push({
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: item.prices[0],
+                            count: item.normalCount,
+                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                        })
+                
+                    }
+                    for (let i=item.normalCount; i<item.prices.length; i++) {
+                        items.push({
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: item.prices[i],
+                            count: 1,
+                            finalAmount: item.prices[i]
+                        })
+                    }
+                } else {
+                    items.push({
+                        ...item,
+                        originalPrice: item.sellPrice
+                    })
                 }
             })
-            let taxObj = this.taxGroupBy(items)
+            // let items = this.orderData.items.map(item => {
+            //     return {
+            //         ...item,
+            //         originalPrice: item.sellPrice
+            //     }
+            // })
+            let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
             let taxAmountList = []
             for (let key in taxObj) {
@@ -926,13 +990,43 @@ export default {
                 });
                 return
             }
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    if (item.normalCount > 0) {
+                        items.push({
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: item.prices[0],
+                            settlePrice: item.prices[0],
+                            count: item.normalCount,
+                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                        })
+                    }
+                    for (let i=item.normalCount; i<item.prices.length; i++) {
+                        items.push({
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: item.prices[i],
+                            settlePrice: item.prices[i],
+                            count: 1,
+                            finalAmount: item.prices[i]
+                        })
+                    }
+                } else {
+                    items.push({
+                        ...item,
+                        originalPrice: item.sellPrice
+                    })
+                }
+            })
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
             let orderData = JSON.parse(JSON.stringify(this.orderData))
             let taxData = {
                 shopId: this.shopInfo.id,
-                items: orderData.items,
+                items,
                 cashAmount: formatFloat(this.cashAmount),
                 cardAmount: formatFloat(this.cardAmount),
                 bizumAmount: formatFloat(this.bizumAmount),

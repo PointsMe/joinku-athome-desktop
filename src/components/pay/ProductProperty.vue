@@ -73,7 +73,7 @@
 </template>
 
 <script>
-import {validateFloat, validateInteger, validateZeroFloat} from "@/utils/validate";
+import {validateFloat, validateZeroFloat} from "@/utils/validate";
 import {formatFloat} from "@/utils/common";
 
 export default {

@@ -58,6 +58,13 @@
                             :label="$t('subtotal') + ' (€)'"
                             align="center"
                             min-width="120">
+                            <template slot-scope="scope">
+                                <div class="cell-price" v-if="scope.row.ifRuleDiscountItem">
+                                    <del>{{ scope.row.originalAmount }}</del>
+                                    <span class="price">{{ scope.row.finalAmount }}</span>
+                                </div>
+                                <span v-else>{{ scope.row.finalAmount }}</span>
+                            </template>
                         </el-table-column>
                     </el-table>
                 </div>
@@ -122,6 +129,7 @@
                 :itemImage="itemImage"
                 :totalCount="totalCount"
                 :orderData="orderData"
+                :productList="productList"
                 @open-cashbox="openCashbox"
                 @session-update="getCurrentSession"
                 @toggle-page="togglePage">
@@ -149,7 +157,7 @@ import FooterCheckout from "@/components/pay/FooterCheckout";
 import ProductEdit from "@/components/product/Edit"
 
 import {queryCurrentSession, updateCartProduct} from "@/api";
-import {countPropertyTotal} from "@/utils/common";
+import {countPropertyTotal, formatRetainFloat} from "@/utils/common";
 import {mapMutations, mapState} from "vuex";
 import {epsonCashBox} from "@/utils/printer";
 import {normalOpenCashbox} from "@/utils/ipc";
@@ -231,7 +239,26 @@ export default {
         getCurrentSession (b = false) {
             queryCurrentSession().then(res => {
                 if (Number(res.code) === 20000) {
-                    this.productList = res.data.items || []
+                    let items = res.data.items || []
+                    this.productList = items.map(item => {
+                        let ruleDiscount = item.discounts.find(discount => discount.type === 104)
+                        let ifRuleDiscountItem = false
+                        let prices = []
+                        let normalCount = item.count
+                        if (ruleDiscount !== undefined && ruleDiscount.amount > 0) {
+                            ifRuleDiscountItem = true
+                            const amounts = ruleDiscount.amounts ? ruleDiscount.amounts.split(',') : []
+                            const arr1 = Array(item.count).fill(item.finalPrice)
+                            normalCount = item.count - amounts.length
+                            prices = this.subtractFromArray(arr1, amounts)
+                        }
+                        return {
+                            ...item,
+                            ifRuleDiscountItem,
+                            normalCount,
+                            prices
+                        }
+                    })
                     if (this.productList.length > 0) {
                         const currentIndex = this.productList.findIndex(item => item.id === this.itemId)
                         if (currentIndex === -1) {
@@ -283,6 +310,17 @@ export default {
             }).catch(err => {
                 this.$message.error(err)
             })
+        },
+        // 折扣价格
+        subtractFromArray (arr1, arr2) {
+            const result = [...arr1];
+            let len1 = result.length;
+            let len2 = arr2.length;
+            for (let i = 0; i < len2; i++) {
+                let index = len1 - len2 + i;
+                result[index] = formatRetainFloat(result[index] - arr2[i])
+            }
+            return result;
         },
         // 自定义行名称
         rowClassName ({row, rowIndex}) {
