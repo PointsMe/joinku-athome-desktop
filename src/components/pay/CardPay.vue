@@ -83,7 +83,8 @@ export default {
             timer: null,
             payStatus: '',
             finalStatus: 100,   // 100: 支付中     101: 支付成功   102: 支付失败
-            disabled: false
+            disabled: false,
+            signatureUnderway: false,   // 签名中
         };
     },
     // 计算属性
@@ -116,6 +117,7 @@ export default {
         initData () {
             this.dialogVisible = true
             this.finalStatus = 100
+            this.signatureUnderway = false
             this.startTimer()
             setTimeout(() => {
                 this.endTimer()
@@ -147,6 +149,7 @@ export default {
     
         // 确认支付签名
         changePaySignState (b) {
+            if (this.finalStatus !== 100) return;
             let params = {
                 accepted: b
             }
@@ -172,6 +175,7 @@ export default {
                 this.$message.error(error);
             }).finally(() => {
                 this.disabled = false
+                this.signatureUnderway = false
             })
         },
     
@@ -186,6 +190,7 @@ export default {
         },
         // 支付结果查询
         getPayResult () {
+            if (this.signatureUnderway) return;
             queryPayResult(this.paySessionId).then(res => {
                 if (!res) return
                 const status = res.status
@@ -210,6 +215,13 @@ export default {
                     setTimeout(() => {
                         this.dialogVisible = false
                     }, 1000)
+                } else if (status === 'SignatureVerificationRequired') {
+                    this.finalStatus = 100
+                    // 10秒后自动签名确认
+                    this.signatureUnderway = true
+                    setTimeout(() => {
+                        this.changePaySignState(true)
+                    }, 10000)
                 } else {
                     this.finalStatus = 100
                 }
