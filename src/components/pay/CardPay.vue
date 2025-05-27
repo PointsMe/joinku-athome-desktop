@@ -217,11 +217,11 @@ export default {
                     }, 1000)
                 } else if (status === 'SignatureVerificationRequired') {
                     this.finalStatus = 100
-                    // 10秒后自动签名确认
+                    // 5秒后自动签名确认
                     this.signatureUnderway = true
                     setTimeout(() => {
                         this.changePaySignState(true)
-                    }, 10000)
+                    }, 5000)
                 } else {
                     this.finalStatus = 100
                 }
