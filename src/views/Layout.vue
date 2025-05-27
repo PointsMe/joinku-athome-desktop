@@ -111,7 +111,7 @@ export default {
             if (!event.ctrlKey && event.key === 'F4') {  // 修改密码
                 this.showPassword()
             } else if (event.altKey && event.key === 'F8') {  //  日总结
-                this.$refs.layoutAside.printTodayStats()
+                this.$refs.layoutAside.getTotalStats()
             } else if (event.ctrlKey && event.key === 'F8') {  //  员工日总结
                 this.$refs.layoutAside.getEmployeeStats()
             } else if (event.ctrlKey && event.key === 's') {
