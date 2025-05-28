@@ -197,7 +197,7 @@
 
 import {createRefundOrder, queryOrderDetail, updateOrderReceipt} from "@/api";
 import {validateFloat, validateInteger} from "@/utils/validate";
-import {formatFloat, formatRetainFloat} from "@/utils/common";
+import {formatFloat, formatFloorFloat} from "@/utils/common";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
 import {mapMutations, mapState} from "vuex";
@@ -350,7 +350,7 @@ export default {
             this.itemDiscountAmount = data.itemDiscountAmount
             this.orderDiscountAmount = data.orderDiscountAmount
             this.totalDiscountAmount = data.totalDiscountAmount
-            this.finalAmount = formatRetainFloat(data.finalAmount)
+            this.finalAmount = formatFloorFloat(data.finalAmount)
             this.remark = data.remark
             this.payments = data.payments || []
             this.paidAmount = data.paidAmount
@@ -364,7 +364,7 @@ export default {
             let len2 = arr2.length;
             for (let i = 0; i < len2; i++) {
                 let index = len1 - len2 + i;
-                result[index] = formatRetainFloat(result[index] - arr2[i])
+                result[index] = formatFloorFloat(result[index] - arr2[i])
             }
             return result;
         },
@@ -534,7 +534,7 @@ export default {
                             finalPrice: item.prices[0],
                             settlePrice: item.prices[0],
                             count: item.normalCount,
-                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                            finalAmount: formatFloorFloat(item.prices[0] * item.normalCount)
                         })
                 
                     }
@@ -699,7 +699,7 @@ export default {
                             finalPrice: item.prices[0],
                             settlePrice: item.prices[0],
                             count: item.normalCount,
-                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                            finalAmount: formatFloorFloat(item.prices[0] * item.normalCount)
                         })
                     }
                     for (let i=item.normalCount; i<item.prices.length; i++) {
@@ -839,7 +839,7 @@ export default {
                             finalPrice: item.prices[0],
                             settlePrice: item.prices[0],
                             count: item.normalCount,
-                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                            finalAmount: formatFloorFloat(item.prices[0] * item.normalCount)
                         })
                 
                     }

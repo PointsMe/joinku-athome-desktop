@@ -1,3 +1,4 @@
+import Decimal from 'decimal.js'
 /**
  * 计算总价格
  * @param data [{price: 10, count: 1}]
@@ -44,45 +45,57 @@ export const formatFloat = (str) => {
 }
 
 /**
- * 使用小数
+ * 使用小数（四舍五入）
  * @param val
  * @returns {string|number}
  */
-export const formatUseFloat = (val, n = 2) => {
+export const formatRoundFloat = (val, n = 2) => {
     if (val) {
         const num = Number(val.toString().replace(',', '.'))
-        const factor = Math.pow(10, n);
-        return Math.round(num * factor) / factor;
+        return new Decimal(num).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
     } else {
         return 0
     }
 }
 
 /**
- * 保留小数使用逗号
+ * 保留小数（四舍五入）使用逗号
  * @param val
  * @returns {string|number}
  */
 export const formatUseDot = (val, n = 2) => {
     if (val || val === 0) {
         let num = Number(val)
-        const factor = Math.pow(10, n);
-        return (Math.round(num * factor) / factor).toFixed(n).replace('.', ',')
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_HALF_UP).toFixed(n).replace('.', ',')
     } else {
         return ''
     }
 }
 
 /**
- * 保留小数  (只保留后 n 位)
+ * 保留小数 (第n位后直接舍去)
  * @param val
  * @returns {string|number}
  */
-export const formatRetainFloat = (val, n = 2) => {
+export const formatFloorFloat = (val, n = 2) => {
     if (val) {
         const num = Number(val.toString().replace(',', '.'))
-        const factor = Math.pow(10, n);
-        return Math.floor(num * factor) / factor;
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
+    } else {
+        return 0
+    }
+}
+
+/**
+ * 格式化计算小数 (第n位后直接舍去)
+ * @param val
+ * @returns {string|number}
+ */
+export const formatCalculateFloat = (val, n = 2) => {
+    if (val) {
+        const factor = Math.pow(10, 6);
+        const num = Math.round(val * factor) / factor;
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
     } else {
         return 0
     }

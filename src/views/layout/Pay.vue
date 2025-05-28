@@ -157,7 +157,7 @@ import FooterCheckout from "@/components/pay/FooterCheckout";
 import ProductEdit from "@/components/product/Edit"
 
 import {queryCurrentSession, updateCartProduct} from "@/api";
-import {countPropertyTotal, formatRetainFloat} from "@/utils/common";
+import {countPropertyTotal, formatCalculateFloat} from "@/utils/common";
 import {mapMutations, mapState} from "vuex";
 import {epsonCashBox} from "@/utils/printer";
 import {normalOpenCashbox} from "@/utils/ipc";
@@ -318,7 +318,7 @@ export default {
             let len2 = arr2.length;
             for (let i = 0; i < len2; i++) {
                 let index = len1 - len2 + i;
-                result[index] = formatRetainFloat(result[index] - arr2[i])
+                result[index] = formatCalculateFloat(result[index] - arr2[i])
             }
             return result;
         },

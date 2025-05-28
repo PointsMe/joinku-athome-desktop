@@ -1,5 +1,5 @@
-
 import moment from "moment";
+import Decimal from 'decimal.js'
 
 /**
  * 格式化日期
@@ -45,15 +45,14 @@ const filteFloat = (val) => {
 }
 
 /**
- * 使用小数
+ * 使用小数（四舍五入）
  * @param val
  * @returns {string|number}
  */
 const filterUseFloat = (val, n = 2) => {
     if (val) {
         let num = Number(val)
-        const factor = Math.pow(10, n);
-        return (Math.round(num * factor) / factor).toFixed(n).replace(/\./g, ',')
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_HALF_UP).toFixed(n).replace('.', ',')
     } else {
         return 0
     }
@@ -67,8 +66,7 @@ const filterUseFloat = (val, n = 2) => {
 const filterSaveFloat = (val, n = 2) => {
     if (val) {
         let num = Number(val)
-        const factor = Math.pow(10, n);
-        return (Math.floor(num * factor) / factor).toFixed(n).replace(/\./g, ',')
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_DOWN).toFixed(n).replace('.', ',')
     } else {
         return 0
     }

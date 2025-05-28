@@ -252,7 +252,13 @@ import OrderRemark from "@/components/pay/OrderRemark";
 // 刷卡支付
 import CardPay from '@/components/pay/CardPay'
 import {mapMutations, mapState} from "vuex";
-import {Debounce, formatFloat, formatRetainFloat, formatUseDot} from "@/utils/common";
+import {
+    Debounce,
+    formatFloat,
+    formatFloorFloat,
+    formatUseDot,
+    formatCalculateFloat
+} from "@/utils/common";
 import {
     cancelOrderDiscount,
     cancelOrderRounding,
@@ -327,7 +333,7 @@ export default {
         }),
         itemTotalAmount () {
             if (this.orderData) {
-                return formatRetainFloat(this.orderData.itemFinalAmount + this.orderData.itemDiscountAmount, 4)
+                return formatCalculateFloat(this.orderData.itemFinalAmount + this.orderData.itemDiscountAmount, 4)
             } else {
                 return 0
             }
@@ -358,7 +364,7 @@ export default {
         // 初始化付款金额
         initPayAmount () {
             if (!this.orderData) return;
-            this.finalAmount = formatRetainFloat(this.orderData.finalAmount)
+            this.finalAmount = formatFloorFloat(this.orderData.finalAmount)
             this.copeAmount = formatUseDot(this.finalAmount)
             this.cashAmount = this.copeAmount
             this.cardAmount = ''
@@ -457,18 +463,18 @@ export default {
                 this.roundingAmount = ''
                 return
             }
-            const cashAmount = formatRetainFloat(this.cashAmount)
-            const cardAmount = formatRetainFloat(this.cardAmount)
-            const bizumAmount = formatRetainFloat(this.bizumAmount)
-            const ticketAmount = formatRetainFloat(this.ticketAmount)
-            const unpaidAmount = formatRetainFloat(this.unpaidAmount)
+            const cashAmount = formatFloorFloat(this.cashAmount)
+            const cardAmount = formatFloorFloat(this.cardAmount)
+            const bizumAmount = formatFloorFloat(this.bizumAmount)
+            const ticketAmount = formatFloorFloat(this.ticketAmount)
+            const unpaidAmount = formatFloorFloat(this.unpaidAmount)
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
-            const finalAmount = formatRetainFloat(this.orderData.finalAmount)
+            const finalAmount = formatFloorFloat(this.orderData.finalAmount)
             // 找零
             const roundingAmount = cashAmount + cardAmount + bizumAmount + ticketAmount + unpaidAmount + voucherAmount - finalAmount
-            this.roundingAmount = formatRetainFloat(roundingAmount)
+            this.roundingAmount = formatCalculateFloat(roundingAmount)
         },
     
         // 支付框按键按下
@@ -597,7 +603,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: formatRetainFloat(this.orderData.finalAmount),
+                        finalAmount: formatFloorFloat(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -630,7 +636,7 @@ export default {
                             finalPrice: item.prices[0],
                             settlePrice: item.prices[0],
                             count: item.normalCount,
-                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                            finalAmount: formatCalculateFloat(item.prices[0] * item.normalCount)
                         })
                         
                     }
@@ -697,7 +703,7 @@ export default {
                 itemTotalAmount: this.itemTotalAmount,
                 itemDiscountAmount: this.orderData.itemDiscountAmount,
                 orderDiscountAmount: this.orderData.orderDiscountAmount,
-                finalAmount: formatRetainFloat(this.orderData.finalAmount),
+                finalAmount: formatFloorFloat(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 member: this.orderData.member,
             }
@@ -777,7 +783,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: formatRetainFloat(this.orderData.finalAmount),
+                        finalAmount: formatFloorFloat(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -819,7 +825,7 @@ export default {
                             originalPrice: item.sellPrice,
                             finalPrice: item.prices[0],
                             count: item.normalCount,
-                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                            finalAmount: formatCalculateFloat(item.prices[0] * item.normalCount)
                         })
                 
                     }
@@ -884,7 +890,7 @@ export default {
                 itemTotalAmount: this.itemTotalAmount,
                 itemDiscountAmount: this.orderData.itemDiscountAmount,
                 orderDiscountAmount: this.orderData.orderDiscountAmount,
-                finalAmount: formatRetainFloat(this.orderData.finalAmount),
+                finalAmount: formatFloorFloat(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 invoiceData,
                 member: this.orderData.member
@@ -958,7 +964,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: formatRetainFloat(this.orderData.finalAmount),
+                        finalAmount: formatFloorFloat(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -1000,7 +1006,7 @@ export default {
                             finalPrice: item.prices[0],
                             settlePrice: item.prices[0],
                             count: item.normalCount,
-                            finalAmount: formatRetainFloat(item.prices[0] * item.normalCount)
+                            finalAmount: formatCalculateFloat(item.prices[0] * item.normalCount)
                         })
                     }
                     for (let i=item.normalCount; i<item.prices.length; i++) {
@@ -1027,12 +1033,12 @@ export default {
             let taxData = {
                 shopId: this.shopInfo.id,
                 items,
-                cashAmount: formatFloat(this.cashAmount),
-                cardAmount: formatFloat(this.cardAmount),
-                bizumAmount: formatFloat(this.bizumAmount),
-                ticketAmount: formatFloat(this.ticketAmount),
-                unpaidAmount: formatFloat(this.unpaidAmount),
-                voucherAmount,
+                cashAmount: formatFloorFloat(this.cashAmount),
+                cardAmount: formatFloorFloat(this.cardAmount),
+                bizumAmount: formatFloorFloat(this.bizumAmount),
+                ticketAmount: formatFloorFloat(this.ticketAmount),
+                unpaidAmount: formatFloorFloat(this.unpaidAmount),
+                voucherAmount: formatCalculateFloat(voucherAmount),
                 discountAmount: orderData.orderDiscountAmount, // 打折金额
                 lotteryCode: this.lotteryCode,
                 writeType: taxPrinterType,
@@ -1087,35 +1093,35 @@ export default {
             if (this.cashAmount && validateFloat(this.cashAmount)) {
                 let obj = {
                     paymode: 101,
-                    amount: formatRetainFloat(this.cashAmount)
+                    amount: formatFloorFloat(this.cashAmount)
                 }
                 payments.push(obj);
             }
             if (this.cardAmount && validateFloat(this.cardAmount)) {
                 let obj = {
                     paymode: 102,
-                    amount: formatRetainFloat(this.cardAmount)
+                    amount: formatFloorFloat(this.cardAmount)
                 }
                 payments.push(obj);
             }
             if (this.bizumAmount && validateFloat(this.bizumAmount)) {
                 let obj = {
                     paymode: 106,
-                    amount: formatRetainFloat(this.bizumAmount)
+                    amount: formatFloorFloat(this.bizumAmount)
                 }
                 payments.push(obj);
             }
             if (this.ticketAmount && validateFloat(this.ticketAmount)) {
                 let obj = {
                     paymode: 103,
-                    amount: formatRetainFloat(this.ticketAmount)
+                    amount: formatFloorFloat(this.ticketAmount)
                 }
                 payments.push(obj);
             }
             if (this.unpaidAmount && validateFloat(this.unpaidAmount)) {
                 let obj = {
                     paymode: 104,
-                    amount: formatRetainFloat(this.unpaidAmount)
+                    amount: formatFloorFloat(this.unpaidAmount)
                 }
                 payments.push(obj);
             }
@@ -1132,7 +1138,7 @@ export default {
                 })
                 let obj = {
                     paymode: 105,
-                    amount: formatRetainFloat(voucherAmount)
+                    amount: formatCalculateFloat(voucherAmount)
                 }
                 payments.push(obj);
             }
@@ -1285,18 +1291,18 @@ export default {
                     break;
             }
             if (!this.checkPayments()) return ''
-            const cashAmount = formatRetainFloat(this.cashAmount)
-            const cardAmount = formatRetainFloat(this.cardAmount)
-            const bizumAmount = formatRetainFloat(this.bizumAmount)
-            const ticketAmount = formatRetainFloat(this.ticketAmount)
-            const unpaidAmount = formatRetainFloat(this.unpaidAmount)
+            const cashAmount = formatFloorFloat(this.cashAmount)
+            const cardAmount = formatFloorFloat(this.cardAmount)
+            const bizumAmount = formatFloorFloat(this.bizumAmount)
+            const ticketAmount = formatFloorFloat(this.ticketAmount)
+            const unpaidAmount = formatFloorFloat(this.unpaidAmount)
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
-            const finalAmount = formatRetainFloat(this.orderData.finalAmount)
+            const finalAmount = formatFloorFloat(this.orderData.finalAmount)
             // 剩余金额
             const roundingAmount = finalAmount - cashAmount - cardAmount - bizumAmount - ticketAmount - unpaidAmount - voucherAmount
-            return formatRetainFloat(roundingAmount)
+            return formatCalculateFloat(roundingAmount)
         },
     
         // 抹零
@@ -1334,9 +1340,9 @@ export default {
             }
             // pos机ID
             const posId = localStorage.getItem("posId")
-            if (this.cardAmount && formatRetainFloat(this.cardAmount) > 0 && this.enabledDojo && !!posId) {
+            if (this.cardAmount && formatFloorFloat(this.cardAmount) > 0 && this.enabledDojo && !!posId) {
                 this.receiptType = type
-                this.posAmount = formatRetainFloat(this.cardAmount)
+                this.posAmount = formatFloorFloat(this.cardAmount)
                 this.getTerminalStatus()
                 // this.startPosPay()
                 return;
