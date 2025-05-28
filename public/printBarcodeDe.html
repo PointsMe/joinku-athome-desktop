@@ -6,60 +6,56 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>条码</title>
     <style>
-        @page{
-            margin: 0.2cm;
-        }
         div, p, span{
             padding: 0;
             margin: 0;
             box-sizing: border-box;
         }
-        i{
-            font-style: normal;
-        }
         body{
-            font-size: 14px;
-            font-family: 'Arial Narrow';
+            font-size: 10pt;
+            font-family: "Segoe UI", "Calibri", "Arial", "Times New Roman", sans-serif;
             color: #000000;
         }
         .container{
-            padding-left: 4px;
-            padding-right: 4px;
+            padding-left: 3pt;
+            padding-right: 3pt;
         }
         p{
-            margin-top: 3px;
-            margin-bottom: 3px;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
         }
         .align-c{
             text-align: center;
         }
         .tips{
-            margin-top: 8px;
-            margin-bottom: 8px;
-            font-size: 15px;
-            font-weight: 500;
+            margin-top: 3pt;
+            margin-bottom: 3pt;
+            font-size: 11pt;
         }
         .line{
-            height: 1px;
-            border-bottom: 1px dashed #000;
-            margin-top: 4px;
-            margin-bottom: 4px;
+            height: 1pt;
+            border-bottom: 1pt dashed #000;
+            margin-top: 3pt;
+            margin-bottom: 3pt;
         }
         .text{
-            font-size: 20px;
-            line-height: 30px;
+            font-size: 16pt;
+            line-height: 24pt;
             text-align: center;
-            font-weight: 600;
+            font-weight: 500;
             color: #000000;
         }
         .barcode{
-            margin-top: 6px;
+            margin-top: 4pt;
             width: 100%;
             display: flex;
             justify-content: center;
         }
         .barcode img{
             vertical-align: top;
+        }
+        .blank{
+            height: 10pt;
         }
     </style>
 </head>
@@ -88,6 +84,9 @@
                 "<img src="+ data.img +">"+
                 '</div>'
         html += '<p class="align-c">' + data.time + '</p>'
+        html += '<p class="blank"></p>';
+        html += '<p class="blank"></p>';
+        html += '<p class="blank"></p>';
         html += '</div>';
         document.getElementById('bd').innerHTML = html;
         //当内容插入到页面后，通过ipcRenderer对象的sendToHost方法和渲染线程通讯，告诉渲染线程打印的内容已经准备完毕，请开始打印操作

@@ -15,74 +15,31 @@
             box-sizing: border-box;
         }
         body{
-            font-size: 14px;
-            font-family: 'Arial Narrow';
+            font-size: 10pt;
+            font-family: "Segoe UI", "Calibri", "Arial", "Times New Roman", sans-serif;
             color: #000000;
         }
         .container{
-            padding-left: 4px;
-            padding-right: 4px;
+            padding-left: 3pt;
+            padding-right: 3pt;
         }
         p{
-            margin-top: 3px;
-            margin-bottom: 3px;
+            margin-top: 2pt;
+            margin-bottom: 2pt;
         }
         .align-c{
             text-align: center;
         }
-        .align-l{
-            text-align: left;
-        }
-        .align-r{
-            text-align: right;
+        .line{
+            height: 1pt;
+            border-bottom: 1pt dashed #000;
+            margin-top: 3pt;
+            margin-bottom: 3pt;
         }
         .tips{
-            margin-top: 8px;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .dishes-header{
-            width: 100%;
-            font-size: 14px;
-        }
-        .dishes-row{
-            width: 100%;
-        }
-        .dishes-row .name{
-            width: calc(100% - 26pt - 48pt);
-            display: inline-block;
-            word-wrap: break-word;
-            vertical-align: top;
-        }
-        .dishes-row .iva{
-            width: 26pt;
-            display: inline-block;
-            word-wrap: break-word;
-            vertical-align: top;
-        }
-        .dishes-row .price{
-            width: 48pt;
-            display: inline-block;
-            word-wrap: break-word;
-            vertical-align: top;
-            text-align: right;
-        }
-        .line{
-            height: 1px;
-            border-bottom: 1px dashed #000;
-            margin-top: 4px;
-        }
-        .tax-row .price{
-            width: 30%;
-            display: inline-block;
-            vertical-align: top;
-        }
-        .tax-row .iva{
-            width: 20%;
-            display: inline-block;
-            vertical-align: top;
-            text-align: center;
+            margin-top: 3pt;
+            margin-bottom: 3pt;
+            font-size: 11pt;
         }
         .row{
             width: 100%;
@@ -90,12 +47,9 @@
             justify-content: space-between;
         }
         .dot{
-            height: 10px;
+            height: 8pt;
             margin-top: 0;
             margin-bottom: 0;
-        }
-        .vital{
-            font-size: 15px;
         }
     </style>
 </head>
@@ -109,11 +63,11 @@
     ipcRenderer.on('webview-print-render', (event, data) => {
         let html = '';
         html = '<div class="container">'+
-                '<p class="align-c vital">'+ data.shopName + '</p>'
+                '<p class="align-c tips">'+ data.shopName + '</p>'
                 if (data.type === 'total') {
-                    html += '<p class="align-c vital">Total</p>'
+                    html += '<p class="align-c tips">Total</p>'
                 } else {
-                    html += '<p class="align-c vital">' + data.username + ' --- ' + data.number + '</p>'
+                    html += '<p class="align-c tips">' + data.username + ' --- ' + data.number + '</p>'
                 }
         html += '<p class="align-c">' + data.startedAt + ' - ' + data.endedAt + '</p>'
         html += '<p class="line"></p>';
