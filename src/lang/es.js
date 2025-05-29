@@ -299,6 +299,9 @@ export default {
     pleConfirmSign: '¡Por favor, confirme la firma!',
     paySuccess: '¡Pago exitoso!',
     payFail: '¡Pago fallido!',
+    payReject: '¡Pago rechazado!',
+    payCancel: '¡Pago cancelado!',
+    payOvertime: '¡Pago caducado!',
     mposDisable: '¡El POS no está disponible!',
     mposInuseHint: 'El POS está en uso, por favor intente más tarde.',
     route: {

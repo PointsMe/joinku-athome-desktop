@@ -157,7 +157,7 @@ import FooterCheckout from "@/components/pay/FooterCheckout";
 import ProductEdit from "@/components/product/Edit"
 
 import {queryCurrentSession, updateCartProduct} from "@/api";
-import {countPropertyTotal, formatCalculateFloat} from "@/utils/common";
+import {countPropertyTotal, decimalMinusRound, decimalTimesRound} from "@/utils/common";
 import {mapMutations, mapState} from "vuex";
 import {epsonCashBox} from "@/utils/printer";
 import {normalOpenCashbox} from "@/utils/ipc";
@@ -214,7 +214,7 @@ export default {
         },
         finalVatAmount () {
             if (this.orderData) {
-                return this.orderData.finalAmount - this.orderData.netAmount
+                return decimalMinusRound(this.orderData.finalAmount, this.orderData.netAmount)
             } else {
                 return 0
             }
@@ -244,18 +244,29 @@ export default {
                         let ruleDiscount = item.discounts.find(discount => discount.type === 104)
                         let ifRuleDiscountItem = false
                         let prices = []
-                        let normalCount = item.count
                         if (ruleDiscount !== undefined && ruleDiscount.amount > 0) {
                             ifRuleDiscountItem = true
                             const amounts = ruleDiscount.amounts ? ruleDiscount.amounts.split(',') : []
-                            const arr1 = Array(item.count).fill(item.finalPrice)
-                            normalCount = item.count - amounts.length
-                            prices = this.subtractFromArray(arr1, amounts)
+                            prices = amounts.map(discount => {
+                                let price = decimalMinusRound(item.finalPrice, discount)
+                                return {
+                                    price,
+                                    count: 1,
+                                    total: price
+                                }
+                            })
+                            let normalCount = item.count - amounts.length
+                            if (normalCount > 0) {
+                                prices.unshift({
+                                    price: item.finalPrice,
+                                    count: normalCount,
+                                    total: decimalTimesRound(item.finalPrice, normalCount)
+                                })
+                            }
                         }
                         return {
                             ...item,
                             ifRuleDiscountItem,
-                            normalCount,
                             prices
                         }
                     })
@@ -310,17 +321,6 @@ export default {
             }).catch(err => {
                 this.$message.error(err)
             })
-        },
-        // 折扣价格
-        subtractFromArray (arr1, arr2) {
-            const result = [...arr1];
-            let len1 = result.length;
-            let len2 = arr2.length;
-            for (let i = 0; i < len2; i++) {
-                let index = len1 - len2 + i;
-                result[index] = formatCalculateFloat(result[index] - arr2[i])
-            }
-            return result;
         },
         // 自定义行名称
         rowClassName ({row, rowIndex}) {

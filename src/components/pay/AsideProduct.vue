@@ -118,7 +118,7 @@ import {
     pendingOrder,
     cancelSessionOrder
 } from "@/api";
-import {formatRoundFloat} from "@/utils/common";
+import {formatFloatRound} from "@/utils/common";
 
 export default {
     name: "AsideProduct",
@@ -240,10 +240,10 @@ export default {
                     this.changeCount(this.itemCount * val)
                     break;
                 case 104:
-                    this.changePrice(formatRoundFloat(val, 4))
+                    this.changePrice(formatFloatRound(val, 4))
                     break;
                 case 105:
-                    this.changePrice(formatRoundFloat(this.itemPrice * (1 - val / 100), 4))
+                    this.changePrice(formatFloatRound(this.itemPrice * (1 - val / 100), 4))
                     break;
             }
         },

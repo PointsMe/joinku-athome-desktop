@@ -74,7 +74,7 @@ import {
     queryCodelessProduct, updateCartProductCount,
     updateCartProductPrice
 } from "@/api";
-import {Debounce, formatFloat, formatRoundFloat} from "@/utils/common";
+import {Debounce, formatFloat, formatFloatRound} from "@/utils/common";
 import {validateFloat, validateInteger} from "@/utils/validate";
 export default {
     name: "FooterProduct",
@@ -284,11 +284,11 @@ export default {
                 let value = this.keywords
                 if (!validateFloat(value) || formatFloat(value) > 100) return;
                 event.preventDefault();
-                let val = formatRoundFloat(value, 4)
+                let val = formatFloatRound(value, 4)
                 if (this.downCtrl) {
                     this.orderDiscount(val)
                 } else {
-                    this.productPriceChange(formatRoundFloat(this.itemPrice * (1 - val / 100), 4))
+                    this.productPriceChange(formatFloatRound(this.itemPrice * (1 - val / 100), 4))
                 }
                 this.keywords = ''
             } else if (event.key === 'PageUp') {

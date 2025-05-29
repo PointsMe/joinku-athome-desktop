@@ -97,7 +97,15 @@ export default {
             } else if (this.finalStatus === 101) {
                 return this.$t('paySuccess')
             } else if (this.finalStatus === 102) {
-                return this.$t('payFail')
+                if (this.payStatus === 'Canceled') {
+                    return this.$t('payCancel')
+                } else if (this.payStatus === 'SignatureVerificationRejected' || this.payStatus === 'Declined') {
+                    return this.$t('payReject')
+                } else if (this.payStatus === 'Canceled') {
+                    return this.$t('payOvertime')
+                } else {
+                    return this.$t('payFail')
+                }
             } else {
                 return ''
             }

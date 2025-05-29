@@ -255,7 +255,7 @@ import {mapMutations, mapState} from "vuex";
 import {
     Debounce,
     formatFloat,
-    formatFloorFloat,
+    formatFloatFloor,
     formatUseDot,
     formatCalculateFloat
 } from "@/utils/common";
@@ -364,7 +364,7 @@ export default {
         // 初始化付款金额
         initPayAmount () {
             if (!this.orderData) return;
-            this.finalAmount = formatFloorFloat(this.orderData.finalAmount)
+            this.finalAmount = formatFloatFloor(this.orderData.finalAmount)
             this.copeAmount = formatUseDot(this.finalAmount)
             this.cashAmount = this.copeAmount
             this.cardAmount = ''
@@ -463,15 +463,15 @@ export default {
                 this.roundingAmount = ''
                 return
             }
-            const cashAmount = formatFloorFloat(this.cashAmount)
-            const cardAmount = formatFloorFloat(this.cardAmount)
-            const bizumAmount = formatFloorFloat(this.bizumAmount)
-            const ticketAmount = formatFloorFloat(this.ticketAmount)
-            const unpaidAmount = formatFloorFloat(this.unpaidAmount)
+            const cashAmount = formatFloatFloor(this.cashAmount)
+            const cardAmount = formatFloatFloor(this.cardAmount)
+            const bizumAmount = formatFloatFloor(this.bizumAmount)
+            const ticketAmount = formatFloatFloor(this.ticketAmount)
+            const unpaidAmount = formatFloatFloor(this.unpaidAmount)
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
-            const finalAmount = formatFloorFloat(this.orderData.finalAmount)
+            const finalAmount = formatFloatFloor(this.orderData.finalAmount)
             // 找零
             const roundingAmount = cashAmount + cardAmount + bizumAmount + ticketAmount + unpaidAmount + voucherAmount - finalAmount
             this.roundingAmount = formatCalculateFloat(roundingAmount)
@@ -603,7 +603,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: formatFloorFloat(this.orderData.finalAmount),
+                        finalAmount: formatFloatFloor(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -626,30 +626,21 @@ export default {
         },
         // 预打
         prePressPrint (payments, printType = 'preprint', receiptNumber = '') {
+            // 商品
             let items = []
             this.productList.forEach(item => {
                 if (item.ifRuleDiscountItem) {
-                    if (item.normalCount > 0) {
-                        items.push({
+                    let newList = item.prices.map(inItem => {
+                        return {
                             ...item,
                             originalPrice: item.sellPrice,
-                            finalPrice: item.prices[0],
-                            settlePrice: item.prices[0],
-                            count: item.normalCount,
-                            finalAmount: formatCalculateFloat(item.prices[0] * item.normalCount)
-                        })
-                        
-                    }
-                    for (let i=item.normalCount; i<item.prices.length; i++) {
-                        items.push({
-                            ...item,
-                            originalPrice: item.sellPrice,
-                            finalPrice: item.prices[i],
-                            settlePrice: item.prices[i],
-                            count: 1,
-                            finalAmount: item.prices[i]
-                        })
-                    }
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
                 } else {
                     items.push({
                         ...item,
@@ -657,12 +648,6 @@ export default {
                     })
                 }
             })
-            // let items = this.orderData.items.map(item => {
-            //     return {
-            //         ...item,
-            //         originalPrice: item.sellPrice
-            //     }
-            // })
             let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
             let taxAmountList = []
@@ -703,7 +688,7 @@ export default {
                 itemTotalAmount: this.itemTotalAmount,
                 itemDiscountAmount: this.orderData.itemDiscountAmount,
                 orderDiscountAmount: this.orderData.orderDiscountAmount,
-                finalAmount: formatFloorFloat(this.orderData.finalAmount),
+                finalAmount: formatFloatFloor(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 member: this.orderData.member,
             }
@@ -783,7 +768,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: formatFloorFloat(this.orderData.finalAmount),
+                        finalAmount: formatFloatFloor(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -815,29 +800,21 @@ export default {
                 taxCode: invoiceBuyer.taxCode,
                 contactPhone: invoiceBuyer.contactPhone
             }
-            // 菜品
+            // 商品
             let items = []
             this.productList.forEach(item => {
                 if (item.ifRuleDiscountItem) {
-                    if (item.normalCount > 0) {
-                        items.push({
+                    let newList = item.prices.map(inItem => {
+                        return {
                             ...item,
                             originalPrice: item.sellPrice,
-                            finalPrice: item.prices[0],
-                            count: item.normalCount,
-                            finalAmount: formatCalculateFloat(item.prices[0] * item.normalCount)
-                        })
-                
-                    }
-                    for (let i=item.normalCount; i<item.prices.length; i++) {
-                        items.push({
-                            ...item,
-                            originalPrice: item.sellPrice,
-                            finalPrice: item.prices[i],
-                            count: 1,
-                            finalAmount: item.prices[i]
-                        })
-                    }
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
                 } else {
                     items.push({
                         ...item,
@@ -845,12 +822,6 @@ export default {
                     })
                 }
             })
-            // let items = this.orderData.items.map(item => {
-            //     return {
-            //         ...item,
-            //         originalPrice: item.sellPrice
-            //     }
-            // })
             let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
             let taxAmountList = []
@@ -890,7 +861,7 @@ export default {
                 itemTotalAmount: this.itemTotalAmount,
                 itemDiscountAmount: this.orderData.itemDiscountAmount,
                 orderDiscountAmount: this.orderData.orderDiscountAmount,
-                finalAmount: formatFloorFloat(this.orderData.finalAmount),
+                finalAmount: formatFloatFloor(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 invoiceData,
                 member: this.orderData.member
@@ -964,7 +935,7 @@ export default {
                     }
                     // 保存买单信息
                     this.saveRecordPayment({
-                        finalAmount: formatFloorFloat(this.orderData.finalAmount),
+                        finalAmount: formatFloatFloor(this.orderData.finalAmount),
                         payments,
                         roundingAmount: this.roundingAmount
                     })
@@ -996,29 +967,21 @@ export default {
                 });
                 return
             }
+            // 商品
             let items = []
             this.productList.forEach(item => {
                 if (item.ifRuleDiscountItem) {
-                    if (item.normalCount > 0) {
-                        items.push({
+                    let newList = item.prices.map(inItem => {
+                        return {
                             ...item,
                             originalPrice: item.sellPrice,
-                            finalPrice: item.prices[0],
-                            settlePrice: item.prices[0],
-                            count: item.normalCount,
-                            finalAmount: formatCalculateFloat(item.prices[0] * item.normalCount)
-                        })
-                    }
-                    for (let i=item.normalCount; i<item.prices.length; i++) {
-                        items.push({
-                            ...item,
-                            originalPrice: item.sellPrice,
-                            finalPrice: item.prices[i],
-                            settlePrice: item.prices[i],
-                            count: 1,
-                            finalAmount: item.prices[i]
-                        })
-                    }
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
                 } else {
                     items.push({
                         ...item,
@@ -1033,11 +996,11 @@ export default {
             let taxData = {
                 shopId: this.shopInfo.id,
                 items,
-                cashAmount: formatFloorFloat(this.cashAmount),
-                cardAmount: formatFloorFloat(this.cardAmount),
-                bizumAmount: formatFloorFloat(this.bizumAmount),
-                ticketAmount: formatFloorFloat(this.ticketAmount),
-                unpaidAmount: formatFloorFloat(this.unpaidAmount),
+                cashAmount: formatFloatFloor(this.cashAmount),
+                cardAmount: formatFloatFloor(this.cardAmount),
+                bizumAmount: formatFloatFloor(this.bizumAmount),
+                ticketAmount: formatFloatFloor(this.ticketAmount),
+                unpaidAmount: formatFloatFloor(this.unpaidAmount),
                 voucherAmount: formatCalculateFloat(voucherAmount),
                 discountAmount: orderData.orderDiscountAmount, // 打折金额
                 lotteryCode: this.lotteryCode,
@@ -1093,35 +1056,35 @@ export default {
             if (this.cashAmount && validateFloat(this.cashAmount)) {
                 let obj = {
                     paymode: 101,
-                    amount: formatFloorFloat(this.cashAmount)
+                    amount: formatFloatFloor(this.cashAmount)
                 }
                 payments.push(obj);
             }
             if (this.cardAmount && validateFloat(this.cardAmount)) {
                 let obj = {
                     paymode: 102,
-                    amount: formatFloorFloat(this.cardAmount)
+                    amount: formatFloatFloor(this.cardAmount)
                 }
                 payments.push(obj);
             }
             if (this.bizumAmount && validateFloat(this.bizumAmount)) {
                 let obj = {
                     paymode: 106,
-                    amount: formatFloorFloat(this.bizumAmount)
+                    amount: formatFloatFloor(this.bizumAmount)
                 }
                 payments.push(obj);
             }
             if (this.ticketAmount && validateFloat(this.ticketAmount)) {
                 let obj = {
                     paymode: 103,
-                    amount: formatFloorFloat(this.ticketAmount)
+                    amount: formatFloatFloor(this.ticketAmount)
                 }
                 payments.push(obj);
             }
             if (this.unpaidAmount && validateFloat(this.unpaidAmount)) {
                 let obj = {
                     paymode: 104,
-                    amount: formatFloorFloat(this.unpaidAmount)
+                    amount: formatFloatFloor(this.unpaidAmount)
                 }
                 payments.push(obj);
             }
@@ -1291,15 +1254,15 @@ export default {
                     break;
             }
             if (!this.checkPayments()) return ''
-            const cashAmount = formatFloorFloat(this.cashAmount)
-            const cardAmount = formatFloorFloat(this.cardAmount)
-            const bizumAmount = formatFloorFloat(this.bizumAmount)
-            const ticketAmount = formatFloorFloat(this.ticketAmount)
-            const unpaidAmount = formatFloorFloat(this.unpaidAmount)
+            const cashAmount = formatFloatFloor(this.cashAmount)
+            const cardAmount = formatFloatFloor(this.cardAmount)
+            const bizumAmount = formatFloatFloor(this.bizumAmount)
+            const ticketAmount = formatFloatFloor(this.ticketAmount)
+            const unpaidAmount = formatFloatFloor(this.unpaidAmount)
             const voucherAmount = this.voucherList.reduce((pre, next) => {
                 return pre + next.amount;
             }, 0)
-            const finalAmount = formatFloorFloat(this.orderData.finalAmount)
+            const finalAmount = formatFloatFloor(this.orderData.finalAmount)
             // 剩余金额
             const roundingAmount = finalAmount - cashAmount - cardAmount - bizumAmount - ticketAmount - unpaidAmount - voucherAmount
             return formatCalculateFloat(roundingAmount)
@@ -1340,9 +1303,9 @@ export default {
             }
             // pos机ID
             const posId = localStorage.getItem("posId")
-            if (this.cardAmount && formatFloorFloat(this.cardAmount) > 0 && this.enabledDojo && !!posId) {
+            if (this.cardAmount && formatFloatFloor(this.cardAmount) > 0 && this.enabledDojo && !!posId) {
                 this.receiptType = type
-                this.posAmount = formatFloorFloat(this.cardAmount)
+                this.posAmount = formatFloatFloor(this.cardAmount)
                 this.getTerminalStatus()
                 // this.startPosPay()
                 return;

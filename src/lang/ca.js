@@ -299,6 +299,9 @@ export default {
     pleConfirmSign: 'Si us plau, confirmeu la signatura!',
     paySuccess: 'Pagament amb èxit!',
     payFail: 'El pagament ha fallat!',
+    payReject: 'Pagament rebutjat!',
+    payCancel: 'Pagament cancel·lat!',
+    payOvertime: 'Pagament caducat!',
     mposDisable: 'El TPV no està disponible!',
     mposInuseHint: 'El TPV està en ús, torna-ho a provar més tard!',
     route: {

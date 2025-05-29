@@ -197,7 +197,14 @@
 
 import {createRefundOrder, queryOrderDetail, updateOrderReceipt} from "@/api";
 import {validateFloat, validateInteger} from "@/utils/validate";
-import {formatFloat, formatFloorFloat} from "@/utils/common";
+import {
+    decimalMinusFloor,
+    decimalMinusRound,
+    decimalTimesFloor,
+    decimalTimesRound,
+    formatFloat,
+    formatFloatFloor
+} from "@/utils/common";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
 import {mapMutations, mapState} from "vuex";
@@ -315,30 +322,72 @@ export default {
             this.receiptNumber = data.receiptNumber || ''
             const items = data.items || []
             this.productList = items.map(item => {
-                let maxCount = item.finalCount - item.refundCount
-                let maxAmount = item.settleAmount - item.refundAmount
+                let discounts = item.discounts || []
+                let ruleDiscount = discounts.find(discount => discount.type === 104)
+                let ifRuleDiscountItem = false
+                let prices = []
+                if (ruleDiscount !== undefined && ruleDiscount.amount > 0) {
+                    ifRuleDiscountItem = true
+                    const amounts = ruleDiscount.amounts ? ruleDiscount.amounts.split(',') : []
+                    prices = amounts.map(discount => {
+                        let price = decimalMinusRound(item.finalPrice, discount)
+                        return {
+                            price,
+                            count: 1,
+                            total: price
+                        }
+                    })
+                    let normalCount = item.count - amounts.length
+                    if (normalCount > 0) {
+                        prices.unshift({
+                            price: item.finalPrice,
+                            count: normalCount,
+                            total: decimalTimesRound(item.finalPrice, normalCount)
+                        })
+                    }
+                }
+                return {
+                    ...item,
+                    ifRuleDiscountItem,
+                    prices
+                }
+            })
+            this.productList = items.map(item => {
+                let maxCount = decimalMinusFloor(item.finalCount, item.refundCount)
+                let maxAmount = decimalMinusFloor(item.settleAmount, item.refundAmount)
                 let disabled = item.refundCount >= item.finalCount
                 let discounts = item.discounts || []
                 let ruleDiscount = discounts.find(discount => discount.type === 104)
                 let ifRuleDiscountItem = false
                 let prices = []
-                let normalCount = item.finalCount
                 if (ruleDiscount !== undefined && ruleDiscount.amount > 0) {
                     ifRuleDiscountItem = true
                     const amounts = ruleDiscount.amounts ? ruleDiscount.amounts.split(',') : []
-                    const arr1 = Array(item.finalCount).fill(item.finalPrice)
-                    normalCount = item.finalCount - amounts.length
-                    prices = this.subtractFromArray(arr1, amounts)
+                    prices = amounts.map(discount => {
+                        let price = decimalMinusRound(item.finalPrice, discount)
+                        return {
+                            price,
+                            count: 1,
+                            total: price
+                        }
+                    })
+                    let normalCount = item.finalCount - amounts.length
+                    if (normalCount > 0) {
+                        prices.unshift({
+                            price: item.finalPrice,
+                            count: normalCount,
+                            total: decimalTimesRound(item.finalPrice, normalCount)
+                        })
+                    }
                 }
                 return {
                     ...item,
-                    maxCount,
                     disabled,
+                    maxCount,
                     count: maxCount,
                     maxAmount,
-                    amount: item.settleAmount - item.refundAmount,
+                    amount: maxAmount,
                     ifRuleDiscountItem,
-                    normalCount,
                     prices
                 }
             })
@@ -350,25 +399,14 @@ export default {
             this.itemDiscountAmount = data.itemDiscountAmount
             this.orderDiscountAmount = data.orderDiscountAmount
             this.totalDiscountAmount = data.totalDiscountAmount
-            this.finalAmount = formatFloorFloat(data.finalAmount)
+            this.finalAmount = formatFloatFloor(data.finalAmount)
             this.remark = data.remark
             this.payments = data.payments || []
             this.paidAmount = data.paidAmount
             this.enablePreprint = data.cashierSetting.enablePreprint
             this.enableAliasPrint = data.cashierSetting.enableAliasPrint
         },
-        // 折扣价格
-        subtractFromArray (arr1, arr2) {
-            const result = [...arr1];
-            let len1 = result.length;
-            let len2 = arr2.length;
-            for (let i = 0; i < len2; i++) {
-                let index = len1 - len2 + i;
-                result[index] = formatFloorFloat(result[index] - arr2[i])
-            }
-            return result;
-        },
-        
+       
         // 是否可勾选
         rowSelectable (row, index) {
             return !row.disabled;
@@ -528,25 +566,16 @@ export default {
             let items = []
             this.productList.forEach(item => {
                 if (item.ifRuleDiscountItem) {
-                    if (item.normalCount > 0) {
-                        items.push({
+                    let newList = item.prices.map(inItem => {
+                        return {
                             ...item,
-                            finalPrice: item.prices[0],
-                            settlePrice: item.prices[0],
-                            count: item.normalCount,
-                            finalAmount: formatFloorFloat(item.prices[0] * item.normalCount)
-                        })
-                
-                    }
-                    for (let i=item.normalCount; i<item.prices.length; i++) {
-                        items.push({
-                            ...item,
-                            finalPrice: item.prices[i],
-                            settlePrice: item.prices[i],
-                            count: 1,
-                            finalAmount: item.prices[i]
-                        })
-                    }
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
                 } else {
                     items.push({
                         ...item,
@@ -554,15 +583,8 @@ export default {
                     })
                 }
             })
-            // // 商品
-            // let items = this.productList.map(item => {
-            //     return {
-            //         ...item,
-            //         count: item.finalCount
-            //     }
-            // })
             // 税率
-            let taxObj = this.taxGroupBy(items)
+            let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
             let taxAmountList = []
             for (let key in taxObj) {
@@ -689,28 +711,19 @@ export default {
                 return
             }
             // 商品
-            // 商品
             let items = []
             this.productList.forEach(item => {
                 if (item.ifRuleDiscountItem) {
-                    if (item.normalCount > 0) {
-                        items.push({
+                    let newList = item.prices.map(inItem => {
+                        return {
                             ...item,
-                            finalPrice: item.prices[0],
-                            settlePrice: item.prices[0],
-                            count: item.normalCount,
-                            finalAmount: formatFloorFloat(item.prices[0] * item.normalCount)
-                        })
-                    }
-                    for (let i=item.normalCount; i<item.prices.length; i++) {
-                        items.push({
-                            ...item,
-                            finalPrice: item.prices[i],
-                            settlePrice: item.prices[i],
-                            count: 1,
-                            finalAmount: item.prices[i]
-                        })
-                    }
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
                 } else {
                     items.push({
                         ...item,
@@ -718,12 +731,6 @@ export default {
                     })
                 }
             })
-            // let items = this.productList.map(item => {
-            //     return {
-            //         ...item,
-            //         count: item.finalCount
-            //     }
-            // })
             let cashAmount = 0
             let cardAmount = 0
             let bizumAmount = 0
@@ -829,29 +836,19 @@ export default {
                 contactPhone: invoiceBuyer.contactPhone
             }
             // 商品
-            // 商品
             let items = []
             this.productList.forEach(item => {
                 if (item.ifRuleDiscountItem) {
-                    if (item.normalCount > 0) {
-                        items.push({
+                    let newList = item.prices.map(inItem => {
+                        return {
                             ...item,
-                            finalPrice: item.prices[0],
-                            settlePrice: item.prices[0],
-                            count: item.normalCount,
-                            finalAmount: formatFloorFloat(item.prices[0] * item.normalCount)
-                        })
-                
-                    }
-                    for (let i=item.normalCount; i<item.prices.length; i++) {
-                        items.push({
-                            ...item,
-                            finalPrice: item.prices[i],
-                            settlePrice: item.prices[i],
-                            count: 1,
-                            finalAmount: item.prices[i]
-                        })
-                    }
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
                 } else {
                     items.push({
                         ...item,
@@ -859,12 +856,6 @@ export default {
                     })
                 }
             })
-            // let items = this.productList.map(item => {
-            //     return {
-            //         ...item,
-            //         count: item.finalCount
-            //     }
-            // })
             // 税率
             let taxObj = this.taxGroupBy(this.productList)
             let taxList = []
@@ -953,7 +944,8 @@ export default {
         taxGroupBy(arr) {
             let list = arr.sort((a, b) => b.taxRate - a.taxRate);
             return list.reduce((acc, item) => {
-                let groupKey = item['taxRate'];
+                // let groupKey = item['taxRate'];
+                let groupKey = item['sellTaxRate'];
                 if (!acc[groupKey]) {
                     acc[groupKey] = [];
                 }

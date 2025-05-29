@@ -299,6 +299,9 @@ export default {
     pleConfirmSign: 'Veuillez confirmer la signature!',
     paySuccess: 'Paiement réussi!',
     payFail: 'Échec du paiement!',
+    payReject: 'Paiement refusé !',
+    payCancel: 'Paiement annulé !',
+    payOvertime: 'Paiement expiré !',
     mposDisable: 'Le terminal de paiement est indisponible!',
     mposInuseHint: 'Le terminal est en cours d’utilisation, veuillez réessayer plus tard!',
     route: {

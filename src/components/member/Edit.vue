@@ -146,7 +146,7 @@
                                 inactive-color="#ff4949">
                             </el-switch>
                         </el-form-item>
-                        <el-form-item :label="$t('taxRate')" prop="taxRateTypeId" v-if="companyCountry === 'ES' && formData.enabledIva">
+                        <el-form-item :label="$t('taxRate')" prop="taxRateTypeId" v-if="companyCountry === 'ES' && (formData.enabledIva || formData.enabledReq)">
                             <el-select v-model="formData.taxRateTypeId" clearable>
                                 <el-option
                                     v-for="item in taxRateOptions"

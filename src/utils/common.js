@@ -49,10 +49,10 @@ export const formatFloat = (str) => {
  * @param val
  * @returns {string|number}
  */
-export const formatRoundFloat = (val, n = 2) => {
+export const formatFloatRound = (val, n = 2) => {
     if (val) {
         const num = Number(val.toString().replace(',', '.'))
-        return new Decimal(num).toDecimalPlaces(2, Decimal.ROUND_HALF_UP).toNumber();
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_HALF_UP).toNumber();
     } else {
         return 0
     }
@@ -77,7 +77,7 @@ export const formatUseDot = (val, n = 2) => {
  * @param val
  * @returns {string|number}
  */
-export const formatFloorFloat = (val, n = 2) => {
+export const formatFloatFloor = (val, n = 2) => {
     if (val) {
         const num = Number(val.toString().replace(',', '.'))
         return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
@@ -99,6 +99,50 @@ export const formatCalculateFloat = (val, n = 2) => {
     } else {
         return 0
     }
+}
+
+/**
+ * Decimal 减法 (第n位后直接舍去)
+ * @param val1: 被减数
+ * @param val2: 减数
+ * @param n: 保留小数位
+ * @returns {string|number}
+ */
+export const decimalMinusFloor = (val1, val2, n = 2) => {
+    return new Decimal(val1).minus(val2).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
+}
+
+/**
+ * Decimal 减法 (四舍五入保留n位小数)
+ * @param val1: 被减数
+ * @param val2: 减数
+ * @param n: 保留小数位
+ * @returns {string|number}
+ */
+export const decimalMinusRound = (val1, val2, n = 2) => {
+    return new Decimal(val1).minus(val2).toDecimalPlaces(n, Decimal.ROUND_HALF_UP).toNumber();
+}
+
+/**
+ * Decimal 乘法 (第n位后直接舍去)
+ * @param val1: 被乘数
+ * @param val2: 乘数
+ * @param n: 保留小数位
+ * @returns {string|number}
+ */
+export const decimalTimesFloor = (val1, val2, n = 2) => {
+    return new Decimal(val1).times(val2).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
+}
+
+/**
+ * Decimal 乘法 (四舍五入保留n位小数)
+ * @param val1: 被乘数
+ * @param val2: 乘数
+ * @param n: 保留小数位
+ * @returns {string|number}
+ */
+export const decimalTimesRound = (val1, val2, n = 2) => {
+    return new Decimal(val1).times(val2).toDecimalPlaces(n, Decimal.ROUND_HALF_UP).toNumber();
 }
 
 /**
