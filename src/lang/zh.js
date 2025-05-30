@@ -305,6 +305,10 @@ export default {
     mposDisable: 'POS机不可用！',
     mposInuseHint: 'POS机正在使用，请稍后再试！',
     disSupInteger: '折扣仅支持整数！',
+    customerDisplay: '客显',
+    brand: '品牌',
+    serialPort: '串口',
+    baudRate: '波特率',
     route: {
         cashier: '收银',
         order: '订单',

@@ -39,6 +39,12 @@
                         </div>
                         <span class="text">{{ $t('mpos') }}</span>
                     </div>
+                    <div class="item" @click="displayDialog = true">
+                        <div class="icon">
+                            <i class="iconfont icon-cashier"></i>
+                        </div>
+                        <span class="text">{{ $t('customerDisplay') }}</span>
+                    </div>
                 </div>
             </div>
             <div class="card">
@@ -110,6 +116,10 @@
         <Mpos
             :showDialog="mposDialog"
             @parent-close="mposDialog = false"/>
+        <!-- 客显 -->
+        <CustomerDisplay
+            :showDialog="displayDialog"
+            @parent-close="displayDialog = false"/>
         <!-- 进度条 -->
         <SyncProgress
             :showDialog="progressDialog"/>
@@ -127,6 +137,8 @@ import Username from "@/components/more/Username";
 import PrintBarcode from "@/components/more/PrintBarcode";
 // pos机
 import Mpos from "@/components/more/Mpos";
+// 客显
+import CustomerDisplay from "@/components/more/CustomerDisplay";
 // 同步进度条
 import SyncProgress from "@/components/SyncProgress";
 import {
@@ -147,6 +159,7 @@ export default {
         Username,
         PrintBarcode,
         Mpos,
+        CustomerDisplay,
         SyncProgress
     },
     props: {
@@ -160,6 +173,7 @@ export default {
             barcodeDialog: false,
             progressDialog: false,
             mposDialog: false,
+            displayDialog: false,
         };
     },
     // 计算属性

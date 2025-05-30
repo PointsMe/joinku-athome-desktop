@@ -20,6 +20,9 @@ import qs from 'qs'
 // 引入打印机
 import epsonPrt from '@/utils/epsonPrt.js'
 
+// 引入串口通讯
+// import serialHelper  from "./utils/serial-helper";
+
 // 引入全局过滤器
 import * as custom from '@/utils/filter.js'
 // 注册全局过滤器
@@ -32,6 +35,9 @@ Vue.prototype.$qs = qs
 
 // 注册打印机
 Vue.use(epsonPrt)
+
+// 串口通讯绑定到 Vue 原型
+// Vue.prototype.$serial = serialHelper
 
 // 注册全局导航守卫判断是否未登录
 // 路由白名单

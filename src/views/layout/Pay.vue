@@ -156,10 +156,11 @@ import FooterCheckout from "@/components/pay/FooterCheckout";
 import ProductEdit from "@/components/product/Edit"
 
 import {queryCurrentSession, updateCartProduct} from "@/api";
-import {countPropertyTotal, decimalMinusRound, decimalTimesRound} from "@/utils/common";
+import {countPropertyTotal, decimalMinusRound, decimalTimesRound, formatFloatFloor} from "@/utils/common";
 import {mapMutations, mapState} from "vuex";
 import {epsonCashBox} from "@/utils/printer";
 import {normalOpenCashbox} from "@/utils/ipc";
+import {sendDisplayerAmount, setDisplayerType} from "@/utils/customer-display";
 
 export default {
     name: "Pay",
@@ -188,7 +189,8 @@ export default {
             orderData: null,
             editDialog: false,
             ifCodeless: false,
-            passable: true
+            passable: true,
+            finalAmount: 0
         };
     },
     // 计算属性
@@ -221,7 +223,19 @@ export default {
         ...mapState(['recordPayment']),
     },
     // 监控data中的数据变化
-    watch: {},
+    watch: {
+        pageType: {
+            handler(val) {
+                this.writeDisplayType(val)
+            },
+            immediate: true // 首次加载立即执行
+        },
+        finalAmount (val) {
+            if (this.pageType === 'checkout') {
+                this.writeDisplayMoney(val)
+            }
+        }
+    },
     // 方法集合
     methods: {
         ...mapMutations(['saveLayoutAside']),
@@ -296,8 +310,9 @@ export default {
                         this.itemImage = ''
                         this.ifCodeless = false
                     }
-                    // 总计
                     this.orderData = res.data
+                    // 总计
+                    this.finalAmount = formatFloatFloor(res.data.finalAmount)
                     // 总个数
                     this.totalCount = countPropertyTotal(this.productList, 'count')
                     // 初始化操作类型
@@ -357,14 +372,16 @@ export default {
             })
         },
         // 添加商品
-        addProduct (id) {
-            this.itemId = id
+        addProduct (data) {
+            this.itemId = data.id
             // this.itemCount = 1
             // this.itemPrice = 0
             // this.itemRemark = ''
             // this.itemImage = ''
             // this.ifCodeless = false
             this.getCurrentSession()
+            // 加工显示金额
+            this.writeDisplayMoney(data.amount)
         },
     
         // 切换页面类型
@@ -617,6 +634,25 @@ export default {
             this.$refs.asideRef.productHandleType = ''
             // 扫码框得到焦点
             this.$refs.footerRef.scanCodeFocus()
+        },
+    
+        // 写入显示类型
+        writeDisplayType (type) {
+            if (type === 'product') {
+                setDisplayerType('price')
+                setTimeout(() => {
+                    this.writeDisplayMoney(0)
+                }, 300)
+            } else if (type === 'checkout') {
+                setDisplayerType('total')
+                setTimeout(() => {
+                    this.writeDisplayMoney(this.orderData.finalAmount)
+                }, 300)
+            }
+        },
+        // 写入显示金额
+        writeDisplayMoney (money) {
+            sendDisplayerAmount(money)
         },
     },
     // 创建完成

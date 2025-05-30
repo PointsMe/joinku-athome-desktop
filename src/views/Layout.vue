@@ -22,6 +22,7 @@ import LayoutAside from "@/components/layout/LayoutAside";
 import Password from "@/components/more/Password";
 import {mapMutations, mapState} from "vuex";
 import {queryDojoConfig, queryOrderPaymode} from "@/api";
+import {closeDisplayer, openDisplayer} from "@/utils/customer-display";
 
 export default {
     name: "Layout",
@@ -158,6 +159,15 @@ export default {
         skipPage (name) {
             this.$router.push({ name })
         },
+    
+        // // 打开串口
+        // openPort (port, baud) {
+        //     this.$serial.openSerial(port, baud);
+        // },
+        // // 关闭串口
+        // closePort () {
+        //     this.$serial.closeSerial();
+        // }
     },
     // 创建完成
     created() {
@@ -170,10 +180,20 @@ export default {
         this.getDojoConfig()
         // 监听键盘事件
         window.addEventListener("keydown", this.handleLayoutKeydown);
+        // 打开串口
+        const port = localStorage.getItem("customerDisplayPort") || ''
+        const baud = localStorage.getItem("customerDisplayBaud") || ''
+        if (port && baud) {
+            // this.openPort(port, baud)
+            openDisplayer(port, Number(baud))
+        }
     },
     // 销毁之前
     beforeDestroy() {
         window.removeEventListener("keydown", this.handleLayoutKeydown);
+        // 关闭串口
+        // this.closePort()
+        closeDisplayer()
     }
 };
 </script>

@@ -154,7 +154,10 @@ export default {
                 if (Number(res.code) === 20000) {
                     this.$refs.keywords.$el.querySelector('input').focus();
                     // 添加商品
-                    this.$emit('add-product', '')
+                    this.$emit('add-product', {
+                        id: '',
+                        amount: data.price
+                    })
                 } else {
                     this.$message({
                         showClose: true,
@@ -213,7 +216,10 @@ export default {
             addCartProduct(params).then(res => {
                 if (Number(res.code) === 20000) {
                     // 添加商品
-                    this.$emit('add-product', data.id)
+                    this.$emit('add-product', {
+                        id: data.id,
+                        amount: res.data
+                    })
                 } else {
                     this.$message({
                         showClose: true,
