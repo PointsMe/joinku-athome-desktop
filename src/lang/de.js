@@ -305,6 +305,10 @@ export default {
     mposDisable: 'POS-Gerät nicht verfügbar!',
     mposInuseHint: 'Das POS-Gerät wird gerade verwendet, bitte versuchen Sie es später erneut!',
     disSupInteger: 'Rabatte unterstützen nur ganze Zahlen!',
+    customerDisplay: 'Kundendisplay',
+    brand: 'Marke',
+    serialPort: 'Serieller Anschluss',
+    baudRate: 'Baudrate',
     route: {
         cashier: 'Kasse',
         order: 'Bestellung',

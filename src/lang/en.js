@@ -305,6 +305,10 @@ export default {
     mposDisable: 'POS is unavailable!',
     mposInuseHint: 'The POS is in use, please try again later!',
     disSupInteger: 'Discount only supports integers!',
+    customerDisplay: 'Customer display',
+    brand: 'Brand',
+    serialPort: 'Serial port',
+    baudRate: 'Baud rate',
     route: {
         cashier: 'Cashier',
         order: 'Order',

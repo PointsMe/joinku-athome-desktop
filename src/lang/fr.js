@@ -305,6 +305,10 @@ export default {
     mposDisable: 'Le terminal de paiement est indisponible!',
     mposInuseHint: 'Le terminal est en cours d’utilisation, veuillez réessayer plus tard!',
     disSupInteger: 'La remise ne prend en charge que les entiers !',
+    customerDisplay: 'Afficheur client',
+    brand: 'Marque',
+    serialPort: 'Port série',
+    baudRate: 'Débit en bauds',
     route: {
         cashier: 'Caisse',
         order: 'Commande',

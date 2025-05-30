@@ -305,6 +305,10 @@ export default {
     mposDisable: '¡El POS no está disponible!',
     mposInuseHint: 'El POS está en uso, por favor intente más tarde.',
     disSupInteger: 'El descuento solo admite números enteros!',
+    customerDisplay: 'Pantalla del cliente',
+    brand: 'Marca',
+    serialPort: 'Puerto serie',
+    baudRate: 'Velocidad en baudios',
     route: {
         cashier: 'Cajero',
         order: 'Pedido',

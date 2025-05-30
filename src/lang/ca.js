@@ -305,6 +305,10 @@ export default {
     mposDisable: 'El TPV no està disponible!',
     mposInuseHint: 'El TPV està en ús, torna-ho a provar més tard!',
     disSupInteger: 'El descompte només admet enters!',
+    customerDisplay: 'Pantalla del client',
+    brand: 'Marca',
+    serialPort: 'Port sèrie',
+    baudRate: 'Velocitat de baudis',
     route: {
         cashier: 'Caixer',
         order: 'Comanda',
