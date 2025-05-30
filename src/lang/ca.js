@@ -304,6 +304,7 @@ export default {
     payOvertime: 'Pagament caducat!',
     mposDisable: 'El TPV no està disponible!',
     mposInuseHint: 'El TPV està en ús, torna-ho a provar més tard!',
+    disSupInteger: 'El descompte només admet enters!',
     route: {
         cashier: 'Caixer',
         order: 'Comanda',

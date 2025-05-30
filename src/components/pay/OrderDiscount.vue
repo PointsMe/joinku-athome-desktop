@@ -40,7 +40,7 @@
 
 <script>
 
-import {validateFloat} from "@/utils/validate";
+import {validateFloat, validateInteger} from "@/utils/validate";
 import {orderDiscount} from "@/api";
 import {formatFloat} from "@/utils/common";
 
@@ -63,13 +63,21 @@ export default {
             if (!value) {
                 return callback(new Error(this.$t('inpContentHint')));
             }
-            if (!validateFloat(value)) {
-                return callback(new Error(this.$t('inpNotRule')))
+            if (this.formData.type === 101) {
+                if (!validateInteger(value)) {
+                    return callback(new Error(this.$t('disSupInteger')))
+                }
+                if (Number(value) >= 100) {
+                    return callback(new Error(this.$t('inpNotRule')))
+                }
             }
-            if (this.formData.type === 101 && formatFloat(value) >= 100) {
-                return callback(new Error(this.$t('inpNotRule')))
-            } else if (this.formData.type === 102 && formatFloat(value) >= this.finalAmount) {
-                return callback(new Error(this.$t('inpNotRule')))
+            if (this.formData.type === 102) {
+                if (!validateFloat(value)) {
+                    return callback(new Error(this.$t('inpNotRule')))
+                }
+                if (formatFloat(value) >= this.finalAmount) {
+                    return callback(new Error(this.$t('inpNotRule')))
+                }
             }
             callback();
         };

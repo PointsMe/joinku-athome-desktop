@@ -304,6 +304,7 @@ export default {
     payOvertime: 'Zahlung abgelaufen!',
     mposDisable: 'POS-Gerät nicht verfügbar!',
     mposInuseHint: 'Das POS-Gerät wird gerade verwendet, bitte versuchen Sie es später erneut!',
+    disSupInteger: 'Rabatte unterstützen nur ganze Zahlen!',
     route: {
         cashier: 'Kasse',
         order: 'Bestellung',

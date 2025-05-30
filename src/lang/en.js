@@ -304,6 +304,7 @@ export default {
     payOvertime: 'Payment timed out!',
     mposDisable: 'POS is unavailable!',
     mposInuseHint: 'The POS is in use, please try again later!',
+    disSupInteger: 'Discount only supports integers!',
     route: {
         cashier: 'Cashier',
         order: 'Order',

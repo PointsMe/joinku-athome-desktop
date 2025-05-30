@@ -103,7 +103,6 @@
                     <p class="record" v-else></p>
                     <span class="count">{{ $t('sum') }}{{ totalCount | filterUseFloat }}{{ $t('piece') }}</span>
                 </div>
-                
             </div>
             <div class="main-footer">
                 <component

@@ -304,6 +304,7 @@ export default {
     payOvertime: 'Pagamento scaduto!',
     mposDisable: 'POS non disponibile!',
     mposInuseHint: 'Il POS è in uso, riprova più tardi!',
+    disSupInteger: 'Lo sconto supporta solo numeri interi!',
     route: {
         cashier: 'Cassa',
         order: 'Ordine',

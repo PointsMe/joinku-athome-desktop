@@ -304,6 +304,7 @@ export default {
     payOvertime: '支付超时！',
     mposDisable: 'POS机不可用！',
     mposInuseHint: 'POS机正在使用，请稍后再试！',
+    disSupInteger: '折扣仅支持整数！',
     route: {
         cashier: '收银',
         order: '订单',
