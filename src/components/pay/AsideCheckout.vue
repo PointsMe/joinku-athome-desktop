@@ -595,7 +595,7 @@ export default {
                     // 打印
                     if (this.roundingAmount > 0) {
                         this.prePressPrint([...payments, {
-                            paymode: 0,
+                            paymode: 110,
                             amount: this.roundingAmount
                         }], 'preprint')
                     } else {
@@ -750,7 +750,7 @@ export default {
                     if (this.orderData.cashierSetting.enablePreprint) {
                         if (this.roundingAmount > 0) {
                             this.prePressPrint([...payments, {
-                                paymode: 0,
+                                paymode: 110,
                                 amount: this.roundingAmount
                             }], 'invoice', res.data.receiptNumber)
                         } else {
@@ -759,7 +759,7 @@ export default {
                     } else {
                         if (this.roundingAmount > 0) {
                             this.invoicePrint([...payments, {
-                                paymode: 0,
+                                paymode: 110,
                                 amount: this.roundingAmount
                             }], invoiceBuyer, res.data.receiptNumber)
                         } else {
@@ -924,7 +924,7 @@ export default {
                     if (this.shopInfo.countryCode === 'ES') {
                         if (this.roundingAmount > 0) {
                             this.prePressPrint([...payments, {
-                                paymode: 0,
+                                paymode: 110,
                                 amount: this.roundingAmount
                             }], 'tax', res.data.receiptNumber)
                         } else {

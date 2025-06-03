@@ -149,7 +149,9 @@
                             <span class="label" v-else-if="item.paymode === 103">{{ $t('mealVoucher') }}</span>
                             <span class="label" v-else-if="item.paymode === 104">{{ $t('notPaid') }}</span>
                             <span class="label" v-else-if="item.paymode === 105">{{ $t('voucher') }}</span>
-                            <span class="value">{{ item.amount }}</span>
+                            <span class="label" v-else-if="item.paymode === 110">{{ $t('giveChange') }}</span>
+                            <span class="value" v-if="item.paymode === 110">-{{ item.amount }}</span>
+                            <span class="value" v-else>{{ item.amount }}</span>
                         </p>
                         <p class="pay-item pay-total">
                             <span class="label">{{ $t('paidUp') }}</span>
