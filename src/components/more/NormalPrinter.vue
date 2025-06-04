@@ -61,7 +61,9 @@ export default {
         initData () {
             this.dialogVisible = true
             // 打印机设置
-            this.formData.ip = localStorage.getItem("normalPrinterIp") || ''
+            this.$nextTick(() => {
+                this.formData.ip = localStorage.getItem("normalPrinterIp") || ''
+            })
         },
         // 验证表单
         submitForm (formName) {
