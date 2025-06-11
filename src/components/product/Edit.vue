@@ -37,32 +37,32 @@
                             <el-input v-model.trim="formData.sellPrice"></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('promotionalPrice')" prop="promotionalPrice">
-                            <el-input v-model.trim="formData.promotionalPrice"></el-input>
+                            <el-input v-model.trim="formData.promotionalPrice" clearable></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('invoicePrice')" prop="invoicePrice">
-                            <el-input v-model.trim="formData.invoicePrice"></el-input>
+                            <el-input v-model.trim="formData.invoicePrice" clearable></el-input>
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
                         <el-form-item :label="$t('wholesalePrice')" prop="wholesalePrice">
-                            <el-input v-model.trim="formData.wholesalePrice"></el-input>
+                            <el-input v-model.trim="formData.wholesalePrice" clearable></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('deliveryPrice')" prop="deliveryPrice">
-                            <el-input v-model.trim="formData.deliveryPrice"></el-input>
+                            <el-input v-model.trim="formData.deliveryPrice" clearable></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('friendlyPrice')" prop="friendlyPrice">
-                            <el-input v-model.trim="formData.friendlyPrice"></el-input>
+                            <el-input v-model.trim="formData.friendlyPrice" clearable></el-input>
                         </el-form-item>
                     </el-col>
                     <el-col :span="8">
                         <el-form-item :label="$t('memberPrice')" prop="memberPrice">
-                            <el-input v-model.trim="formData.memberPrice"></el-input>
+                            <el-input v-model.trim="formData.memberPrice" clearable></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('internetPrice')" prop="internetPrice">
-                            <el-input v-model.trim="formData.internetPrice"></el-input>
+                            <el-input v-model.trim="formData.internetPrice" clearable></el-input>
                         </el-form-item>
                         <el-form-item :label="$t('specialPrice')" prop="specialPrice">
-                            <el-input v-model.trim="formData.specialPrice"></el-input>
+                            <el-input v-model.trim="formData.specialPrice" clearable></el-input>
                         </el-form-item>
                     </el-col>
                 </el-row>
@@ -91,7 +91,7 @@
 
 <script>
 import {queryProductDetail, updateProduct} from "@/api";
-import {validateZeroFloat} from "@/utils/validate";
+import {validateFloat, validateZeroFloat} from "@/utils/validate";
 import {formatFloat} from "@/utils/common";
 
 export default {
@@ -109,32 +109,31 @@ export default {
         }
     },
     data() {
-        const validatorInteger = (rule, value, callback) => {
-            if (!value && value !== 0) {
-                return callback(new Error(this.$t('inpContentHint')));
-            }
-            const reg = /^(0|[1-9]\d*)$/
-            if (reg.test(value)) {
-                callback()
-            } else {
-                callback(new Error(this.$t('inpNotRule')))
-            }
-        };
         let validatorFloat = (rule, value, callback) => {
             if (!value && value !== 0) {
                 return callback(new Error(this.$t('inpContentHint')));
             }
+            if (validateFloat(value)) {
+                callback()
+            } else {
+                callback(new Error(this.$t('inpNotRule')))
+            }
+        };
+        let validatorZeroFloat = (rule, value, callback) => {
+            if (!value && value !== 0) {
+                return callback(new Error(this.$t('inpContentHint')));
+            }
             if (validateZeroFloat(value)) {
                 callback()
             } else {
                 callback(new Error(this.$t('inpNotRule')))
             }
         };
-        const validatorPrice = (rule, value, callback) => {
-            if (!value) {
+        const validatorNullFloat = (rule, value, callback) => {
+            if (!value && value !== 0) {
                 return callback()
             }
-            if (validateZeroFloat(value)) {
+            if (validateFloat(value)) {
                 callback()
             } else {
                 callback(new Error(this.$t('inpNotRule')))
@@ -163,16 +162,16 @@ export default {
             rules: {
                 name: [{ required: true, message: this.$t('inpContentHint'), trigger: "blur" }],
                 // stock: [{ required: true, validator: validatorStock, trigger: 'blur' }],
-                purchasePrice: [{ required: true, validator: validatorFloat, trigger: 'blur' }],
+                purchasePrice: [{ required: true, validator: validatorZeroFloat, trigger: 'blur' }],
                 sellPrice: [{ required: true, validator: validatorFloat, trigger: 'blur' }],
-                wholesalePrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                memberPrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                promotionalPrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                deliveryPrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                internetPrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                invoicePrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                friendlyPrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
-                specialPrice: [{ required: false, validator: validatorPrice, trigger: 'blur' }],
+                wholesalePrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                memberPrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                promotionalPrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                deliveryPrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                internetPrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                invoicePrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                friendlyPrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
+                specialPrice: [{ required: false, validator: validatorNullFloat, trigger: 'blur' }],
             },
             priceEnums: [
                 {

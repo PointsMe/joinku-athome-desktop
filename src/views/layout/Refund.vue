@@ -30,11 +30,14 @@
                 </ul>
                 <div class="range" v-else>
                     <el-date-picker
-                        v-model="times"
-                        type="datetimerange"
-                        range-separator="-"
-                        :start-placeholder="$t('startTime')"
-                        :end-placeholder="$t('endTime')">
+                        v-model="startTime"
+                        type="datetime"
+                        :placeholder="$t('startTime')">
+                    </el-date-picker>
+                    <el-date-picker
+                        v-model="endTime"
+                        type="datetime"
+                        :placeholder="$t('endTime')">
                     </el-date-picker>
                     <el-button
                         type="primary"
@@ -163,7 +166,8 @@ export default {
                 startedAt: '',
                 endedAt: '',
             },
-            times: [],
+            startTime: '',
+            endTime: '',
             showCustom: false,
             dateType: 0,
             tableHeight: 560,
@@ -251,9 +255,9 @@ export default {
                     this.search.endedAt = moment().endOf("year").format('YYYY-MM-DDTHH:mm:ssZZ')
                     break;
                 case 99:
-                    if (this.times && this.times.length === 2) {
-                        this.search.startedAt = moment(this.times[0]).format('YYYY-MM-DDTHH:mm:ssZZ')
-                        this.search.endedAt = moment(this.times[1]).format('YYYY-MM-DDTHH:mm:ssZZ')
+                    if (this.startTime && this.endTime) {
+                        this.search.startedAt = moment(this.startTime).format('YYYY-MM-DDTHH:mm:ssZZ')
+                        this.search.endedAt = moment(this.endTime).format('YYYY-MM-DDTHH:mm:ssZZ')
                     }
                     break;
             }

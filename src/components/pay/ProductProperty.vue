@@ -125,18 +125,8 @@ export default {
         confirmHandle () {
             if (!this.value) return;
             // 100 改数量   101 数量X  104 改价   105 打折
-            if (this.productHandleType === 100 || this.productHandleType === 101) {
+            if (this.productHandleType === 100 || this.productHandleType === 101 || this.productHandleType === 104) {
                 if (!validateFloat(this.value)) {
-                    this.$message({
-                        showClose: true,
-                        message: this.$t('inpNotRule'),
-                        type: 'warning'
-                    })
-                    return
-                }
-                this.$emit('property-update', formatFloat(this.value))
-            } else if (this.productHandleType === 104) {
-                if (!validateZeroFloat(this.value)) {
                     this.$message({
                         showClose: true,
                         message: this.$t('inpNotRule'),
