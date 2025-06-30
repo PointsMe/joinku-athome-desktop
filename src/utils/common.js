@@ -6,11 +6,10 @@ import Decimal from 'decimal.js'
  */
 import moment from "moment";
 
-export const countTotalPrice = (data, property = 'price') => {
-    const totalPrice = data.reduce((pre, next) => {
+export const countTotalAmount = (data, property = 'amount') => {
+    return data.reduce((pre, next) => {
         return pre + Number(next[property]) * next.count;
     }, 0)
-    return totalPrice
 }
 
 /**
@@ -18,11 +17,10 @@ export const countTotalPrice = (data, property = 'price') => {
  * @param data [{属性: 值}]
  * @returns {*}
  */
-export const countPropertyTotal = (data, property = 'price') => {
-    const countTotal = data.reduce((pre, next) => {
+export const countPropertyTotal = (data, property = 'amount') => {
+    return data.reduce((pre, next) => {
         return pre + Number(next[property])
     }, 0)
-    return countTotal
 }
 
 /**
@@ -95,7 +93,7 @@ export const formatCalculateFloat = (val, n = 2) => {
     if (val) {
         const factor = Math.pow(10, 6);
         const num = Math.round(val * factor) / factor;
-        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
+        return new Decimal(val).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
     } else {
         return 0
     }

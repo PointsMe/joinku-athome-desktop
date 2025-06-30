@@ -185,6 +185,12 @@
                 </el-button>
             </div>
             <div class="handle-right">
+                <!--<el-button-->
+                <!--    type="info"-->
+                <!--    @click="printPdfHandle()"-->
+                <!--    v-if="receipt === 102">-->
+                <!--    {{$t('printPdf')}}-->
+                <!--</el-button>-->
                 <el-button
                     type="info"
                     @click="printBillHandle()">
@@ -198,14 +204,13 @@
 <script>
 
 import {createRefundOrder, queryOrderDetail, updateOrderReceipt} from "@/api";
-import {validateFloat, validateInteger} from "@/utils/validate";
+import {validateFloat} from "@/utils/validate";
 import {
     decimalMinusFloor,
     decimalMinusRound,
-    decimalTimesFloor,
     decimalTimesRound,
     formatFloat,
-    formatFloatFloor
+    formatFloatFloor, formatFloatRound
 } from "@/utils/common";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
@@ -437,7 +442,7 @@ export default {
                 return {
                     orderItemId: item.id,
                     count: item.count,
-                    amount: item.amount
+                    amount: formatFloatRound(item.amount)
                 }
             })
             let params = {
@@ -455,7 +460,8 @@ export default {
                     })
                     this.getDetail()
                     // 生成条码
-                    this.createBarcode(res.data.id, res.data.amount)
+                    const expires = res.data.expires ? moment(res.data.expires).format('DD/MM/YYYY HH:mm') : ''
+                    this.createBarcode(res.data.id, res.data.amount, expires)
                     // 更新订单
                     this.updateOrder()
                 } else {
@@ -478,11 +484,11 @@ export default {
             });
         },
         // 生成条形码
-        createBarcode (code, price) {
+        createBarcode (code, price, expires) {
             if (!code) return ''
             let barcodeOptions = {
                 format: "CODE128",//条形码的格式
-                width: 2,//线宽
+                width: 1.5,//线宽
                 height: 60,//条码高度
                 displayValue: true,//是否显示文字
                 fontSize: 20,//设置文本的大小
@@ -494,17 +500,16 @@ export default {
             const canvas = document.createElement("canvas");
             JsBarcode(canvas, code, barcodeOptions);
             const url = canvas.toDataURL("image/png");
-            this.printBarcode(url, price)
+            this.printBarcode(url, price, expires)
         },
         // 打印条形码
-        printBarcode (url, price) {
+        printBarcode (url, price, expires) {
             queryPrinterList().then(res => {
                 if (res.length !== 0) {
-                    res.forEach((item) => {
-                        if (item.isDefault) {
-                            this.savePrinterName(item.name)
-                        }
-                    });
+                    const defaultPrinter = res.find(item => item.isDefault)
+                    if (defaultPrinter !== undefined) {
+                        this.savePrinterName(defaultPrinter.name)
+                    }
                     
                     let printData = {
                         name: this.shopInfo.name,
@@ -517,7 +522,8 @@ export default {
                         contactPhone: this.shopInfo.contactPhone,
                         price,
                         img: url,
-                        time: moment(new Date()).format('DD/MM/YYYY HH:mm')
+                        time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
+                        expires
                     }
                     if (this.shopInfo.countryCode === 'IT') {
                         let webview = document.querySelector('#printBarcodeIt')
@@ -960,6 +966,12 @@ export default {
         updateOrder () {
             this.$emit('parent-update')
         },
+    
+        // 打印PDF
+        printPdfHandle () {
+        
+        },
+        
         // 关闭弹窗
         dialogClose () {
             this.$emit('parent-close')

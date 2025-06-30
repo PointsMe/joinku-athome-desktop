@@ -50,12 +50,32 @@
                     </el-button>
                 </div>
             </div>
-            <div class="back">
-                <el-button
-                    type="primary"
-                    @click="goBack">
-                    {{ $t('back') }}
-                </el-button>
+            <div class="search">
+                <div class="search-item">
+                    <el-input
+                        v-model="search.id"
+                        clearable
+                        placeholder="ID"
+                        @change="searchHandle">
+                    </el-input>
+                </div>
+                <div class="search-item">
+                    <el-select v-model="search.state" clearable @change="searchHandle" :placeholder="$t('state')">
+                        <el-option
+                            v-for="item in stateOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                        </el-option>
+                    </el-select>
+                </div>
+                <div class="search-handle">
+                    <el-button
+                        type="primary"
+                        @click="goBack">
+                        {{ $t('back') }}
+                    </el-button>
+                </div>
             </div>
         </div>
         <div class="container-main">
@@ -87,10 +107,16 @@
                         prop="createdAt"
                         align="center"
                         min-width="180"
-                        :label="$t('useTime')">
+                        :label="$t('useTime') + ' / ' + $t('ciNum')">
                         <template slot-scope="scope">
-                            <span v-if="scope.row.state === 103">{{ scope.row.updatedAt | filterTime }}</span>
+                            <span v-if="scope.row.useCount === 1">{{ scope.row.updatedAt | filterTime }}</span>
+                            <span class="count" v-else-if="scope.row.useCount > 1">{{ scope.row.useCount }}</span>
                             <span v-else>-</span>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="state" width="140" align="center" :label="$t('useAmount')">
+                        <template slot-scope="scope">
+                            <el-tag v-if="scope.row.state === 101">{{ $t('unused') }}</el-tag>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -110,20 +136,34 @@
 </template>
 
 <script>
-import {queryRefundList, queryVoucherList} from "@/api";
+import { queryVoucherPage} from "@/api";
 import moment from "moment";
 
 export default {
     name: "Voucher",
     // 组件
-    components: {},
+    components: {
+    
+    },
     props: {},
     data() {
         return {
             search: {
+                id: '',
+                state: '',
                 startedAt: '',
                 endedAt: '',
             },
+            stateOptions: [
+                {
+                    label: this.$t('unused'),
+                    value: 101
+                },
+                {
+                    label: this.$t('haveused'),
+                    value: 103
+                }
+            ],
             startTime: '',
             endTime: '',
             showCustom: false,
@@ -133,6 +173,8 @@ export default {
             currentPage: 1,
             total: 0,
             pageSize: 15,
+            itemId: '',
+            recordDialog: false,
         };
     },
     // 计算属性
@@ -207,9 +249,9 @@ export default {
                 startedAt: this.search.startedAt,
                 endedAt: this.search.endedAt,
                 page: this.currentPage,
-                rows: this.pageSize
+                size: this.pageSize
             }
-            queryVoucherList(params).then(res => {
+            queryVoucherPage(params).then(res => {
                 if (res.code === 20000) {
                     this.total = res.data.total
                     this.tableData = res.data.list || []
@@ -230,6 +272,12 @@ export default {
             this.currentPage = page
             // 获取列表数据
             this.getListData()
+        },
+    
+        // 使用记录
+        checkUseRecord (id) {
+            this.itemId = id
+            this.recordDialog = true
         },
         
         // 返回
@@ -296,11 +344,33 @@ export default {
                 }
             }
         }
-        .back{
-            height: 54px;
-            padding-right: 12px;
+        .search{
+            padding-left: 20px;
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
+            .search-item{
+                margin-right: 5px;
+                height: 54px;
+                display: flex;
+                align-items: center;
+                .el-input{
+                    width: 200px;
+                    height: 40px;
+                }
+                ::v-deep .el-select{
+                    width: 170px;
+                    height: 40px;
+                    .el-input{
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+            }
+            .search-handle{
+                height: 54px;
+                display: flex;
+                align-items: center;
+            }
         }
     }
     .container-main{
@@ -309,6 +379,11 @@ export default {
         background-color: #fff;
         .table{
             height: calc(100% - 60px);
+            .count{
+                margin-left: 40px;
+                color: #56A3D9;
+                font-weight: 500;
+            }
         }
         .pagination{
             width: 100%;

@@ -33,7 +33,7 @@
                         </div>
                         <span class="text">{{ $t('userNameEdit') }}</span>
                     </div>
-                    <div class="item" @click="mposDialog = true">
+                    <div class="item" @click="mposDialog = true" v-if="enabledDojo">
                         <div class="icon">
                             <i class="iconfont icon-pos"></i>
                         </div>
@@ -150,6 +150,7 @@ import {
     syncBohaoTotal,
     syncPlatformData
 } from "@/api";
+import {mapState} from "vuex";
 export default {
     name: "More",
     // 组件
@@ -177,7 +178,11 @@ export default {
         };
     },
     // 计算属性
-    computed: {},
+    computed: {
+        ...mapState({
+            enabledDojo: state => state.dojoConfig.enabled   // 启用Dojo
+        }),
+    },
     // 监控data中的数据变化
     watch: {},
     // 方法集合

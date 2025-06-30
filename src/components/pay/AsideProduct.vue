@@ -3,51 +3,48 @@
         <div class="product-handle">
             <el-row :gutter="12">
                 <el-col :span="8">
-                    <el-button class="number-btn" @click="productHandle(101)">
+                    <el-button class="number-btn" @click="handleItemProduct(101)">
                         {{ $t('number') }}&nbsp;X
                     </el-button>
                 </el-col>
                 <el-col :span="8">
-                    <el-button class="number-btn" @click="productHandle(102)">
+                    <el-button class="number-btn" @click="handleItemProduct(102)">
                         {{ $t('number') }}&nbsp;+1
                     </el-button>
                 </el-col>
                 <el-col :span="8">
-                    <el-button class="number-btn" @click="productHandle(103)">
+                    <el-button class="number-btn" @click="handleItemProduct(103)">
                         {{ $t('number') }}&nbsp;-1
                     </el-button>
                 </el-col>
             </el-row>
             <el-row :gutter="12">
                 <el-col :span="8">
-                    <el-button class="price-btn" @click="productHandle(104)">
+                    <el-button class="price-btn" @click="handleItemProduct(104)">
                         {{ $t('editPrice') }}&nbsp;<i class="iconfont icon-edit"></i>
                     </el-button>
                 </el-col>
                 <el-col :span="8">
-                    <el-button class="price-btn" @click="productHandle(105)">{{ $t('discount') }}&nbsp;%</el-button>
+                    <el-button class="price-btn" @click="handleItemProduct(105)">{{ $t('discount') }}&nbsp;%</el-button>
                 </el-col>
                 <el-col :span="8">
-                    <el-button class="repeal-btn" @click="productHandle(106)">{{ $t('repealDiscount') }}</el-button>
+                    <el-button class="repeal-btn" @click="handleItemProduct(106)">{{ $t('repealDiscount') }}</el-button>
                 </el-col>
             </el-row>
             <el-row :gutter="12">
                 <el-col :span="8">
-                    <el-button class="remark-btn" @click="productHandle(107)">
+                    <el-button class="remark-btn" @click="handleItemProduct(107)">
                         {{ $t('remark') }}&nbsp;<i class="iconfont icon-remark"></i>
                     </el-button>
                 </el-col>
-                <!--<el-col :span="8">-->
-                <!--    <el-button class="repeal-btn" @click="productHandle(108)" v-if="itemCount > 0">-->
-                <!--        {{ $t('refund') }}&nbsp;<i class="iconfont icon-return"></i>-->
-                <!--    </el-button>-->
-                <!--    <el-button class="repeal-btn" @click="productHandle(108)" v-else>-->
-                <!--        {{ $t('cancelRefund') }}-->
-                <!--    </el-button>-->
-                <!--</el-col>-->
                 <el-col :span="8">
-                    <el-button class="delete-btn" @click="productHandle(109)">
+                    <el-button class="delete-btn" @click="handleItemProduct(108)">
                         {{ $t('delete') }}&nbsp;<i class="iconfont icon-delete"></i>
+                    </el-button>
+                </el-col>
+                <el-col :span="8">
+                    <el-button class="repeal-btn" @click="sessionRefund()" v-if="totalCount > 0">
+                        {{ $t('refund') }}&nbsp;<i class="iconfont icon-return"></i>
                     </el-button>
                 </el-col>
             </el-row>
@@ -116,9 +113,13 @@ import {
     updateCartProductRemark,
     queryPendingOrderCount,
     pendingOrder,
-    cancelSessionOrder
+    cancelSessionOrder, createSessionRefund
 } from "@/api";
 import {formatFloatRound} from "@/utils/common";
+import JsBarcode from "jsbarcode";
+import {queryPrinterList} from "@/utils/ipc";
+import moment from "moment";
+import {mapMutations, mapState} from "vuex";
 
 export default {
     name: "AsideProduct",
@@ -157,13 +158,14 @@ export default {
     },
     data() {
         return {
-            productHandleType: '',  // 100 改数量  101 数量X  102 数量+1  103 数量-1  104 改价   105 打折  106 撤销优惠   107 备注   108 退货  109 删除
+            productHandleType: '',  // 100 改数量  101 数量X  102 数量+1  103 数量-1  104 改价   105 打折  106 撤销优惠   107 备注  108 删除   109 退货
             pendingCount: 0,
             pendingDialog: false
         };
     },
     // 计算属性
     computed: {
+        ...mapState(['shopInfo']),
         currentTabComponent () {
             if (this.productHandleType === 100 || this.productHandleType === 101 || this.productHandleType === 104 || this.productHandleType === 105) {
                 return 'ProductProperty'
@@ -178,8 +180,9 @@ export default {
     watch: {},
     // 方法集合
     methods: {
+        ...mapMutations(['savePrinterName']),
         // 操作
-        productHandle (type) {
+        handleItemProduct (type) {
             if (!this.itemId) {
                 this.$message({
                     showClose: true,
@@ -219,12 +222,6 @@ export default {
                 }).catch(() => {})
                 return;
             } else if (type === 108) {
-                if (this.itemCount > 0) {
-                    this.productRefund()
-                } else {
-                    this.productUnrefund()
-                }
-            } else if (type === 109) {
                 this.productDelete()
             }
             this.productHandleType = type
@@ -309,46 +306,7 @@ export default {
                 this.$message.error(err)
             })
         },
-        // 退货
-        productRefund () {
-            let params = {
-                itemId: this.itemId,
-            }
-            refundCartProduct(params).then(res => {
-                if (Number(res.code) === 20000) {
-                    // 更新会话
-                    this.$emit('session-update')
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
-            }).catch(err => {
-                this.$message.error(err)
-            })
-        },
-        // 取消退货
-        productUnrefund () {
-            let params = {
-                itemId: this.itemId,
-            }
-            unrefundCartProduct(params).then(res => {
-                if (Number(res.code) === 20000) {
-                    // 更新会话
-                    this.$emit('session-update')
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
-            }).catch(err => {
-                this.$message.error(err)
-            })
-        },
+     
         // 商品删除
         productDelete () {
             let params = {
@@ -455,6 +413,102 @@ export default {
             }).catch(() => {})
         },
     
+        // 退货
+        sessionRefund () {
+            if (this.totalCount === 0) return;
+            createSessionRefund().then(res => {
+                if (Number(res.code) === 20000) {
+                    // 更新会话
+                    this.$emit('session-update')
+                    if (!res.data) return;
+                    // 生成条形码
+                    const expires = res.data.expires ? moment(res.data.expires).format('DD/MM/YYYY HH:mm') : ''
+                    this.createBarcode(res.data.id, res.data.amount, expires)
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: res.msg,
+                        type: 'error'
+                    })
+                }
+            }).catch(err => {
+                this.$message.error(err)
+            })
+        },
+        
+        // 生成条形码
+        createBarcode (code, price, expires) {
+            if (!code) return ''
+            let barcodeOptions = {
+                format: "CODE128",//条形码的格式
+                width: 1.5,//线宽
+                height: 60,//条码高度
+                displayValue: true,//是否显示文字
+                fontSize: 20,//设置文本的大小
+                fontOptions: "bold",
+                textMargin: 2,
+                lineColor: "#000000", // 线条和字体颜色
+                margin: 5 //设置条形码周围的空白区域
+            }
+            const canvas = document.createElement("canvas");
+            JsBarcode(canvas, code, barcodeOptions);
+            const url = canvas.toDataURL("image/png");
+            this.printBarcode(url, price, expires)
+        },
+        // 打印条形码
+        printBarcode (url, price, expires) {
+            queryPrinterList().then(res => {
+                if (res.length !== 0) {
+                    const defaultPrinter = res.find(item => item.isDefault)
+                    if (defaultPrinter !== undefined) {
+                        this.savePrinterName(defaultPrinter.name)
+                    }
+                    let printData = {
+                        name: this.shopInfo.name,
+                        company: this.shopInfo.companyName || '',
+                        address: this.shopInfo.address,
+                        pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
+                        country: this.shopInfo.countryName,
+                        vatNumber: this.shopInfo.vatNumber,
+                        taxCode: this.shopInfo.taxCode,
+                        contactPhone: this.shopInfo.contactPhone,
+                        price,
+                        img: url,
+                        time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
+                        expires
+                    }
+                    if (this.shopInfo.countryCode === 'IT') {
+                        let webview = document.querySelector('#printBarcodeIt')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ZH') {
+                        let webview = document.querySelector('#printBarcodeZh')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'EN') {
+                        let webview = document.querySelector('#printBarcodeEn')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'FR') {
+                        let webview = document.querySelector('#printBarcodeFr')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'DE') {
+                        let webview = document.querySelector('#printBarcodeDe')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ES' || this.shopInfo.countryCode === 'CA') {
+                        let webview = document.querySelector('#printBarcodeEs');
+                        webview.send('webview-print-render', printData); //将数据发送至webview
+                    } else {
+                        let webview = document.querySelector('#printBarcodeEn')
+                        webview.send('webview-print-render', printData)
+                    }
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: this.$t('notPrinter'),
+                        type: 'error'
+                    })
+                }
+            })
+        },
+        
         // 结账
         checkOutHandle () {
             this.$emit('toggle-page', 'checkout')

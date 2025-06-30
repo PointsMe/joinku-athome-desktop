@@ -7,20 +7,26 @@
                custom-class="small-dialog">
         <div class="content">
             <el-form :model="formData" :rules="rules" @submit.native.prevent ref="ruleForm" label-width="auto">
-                <!--<el-form-item :label="$t('productName')" prop="name">-->
-                <!--    <el-input v-model="formData.name" ref="temporaryName"></el-input>-->
-                <!--</el-form-item>-->
+                <el-form-item :label="$t('productName')" prop="name">
+                    <el-input
+                        v-model="formData.name"
+                        ref="inputRef0"
+                        @keydown.native="e => inputKeydown(e,0)"></el-input>
+                </el-form-item>
                 <el-form-item :label="$t('sellPrice')" prop="price">
                     <el-input
                         v-model.trim="formData.price"
-                        id="temporary_price"
-                        ref="priceRef"
-                        @keydown.native="priceKeydown">
+                        ref="inputRef1"
+                        @keydown.native="e => inputKeydown(e,1)">
                         <template slot="append">€</template>
                     </el-input>
                 </el-form-item>
                 <el-form-item label="IVA" prop="taxRate">
-                    <el-select v-model="formData.taxRate" ref="taxRateRef" filterable @keyup.enter.native="submitForm()">
+                    <el-select
+                        v-model="formData.taxRate"
+                        ref="inputRef2"
+                        filterable
+                        @keydown.native="e => inputKeydown(e,2)">
                         <el-option
                             v-for="item in taxRateOptions"
                             :key="item.value"
@@ -81,15 +87,18 @@ export default {
                 taxRate: ''
             },
             rules: {
-                // name: [
-                //     { required: true, message: this.$t('inpContentHint'), trigger: "blur" }
-                // ],
+                name: [
+                    { required: true, message: this.$t('inpContentHint'), trigger: "blur" }
+                ],
                 price: [
                     { required: true, validator: validatorFloat, trigger: 'blur' }
                 ],
                 taxRate: [
-                    { required: true, validator: validatorFloat, trigger: 'blur' }
-                ]
+                    { required: true, message: this.$t('selContentHint'), trigger: 'change' }
+                ],
+                // taxRate: [
+                //     { required: true, validator: validatorFloat, trigger: 'blur' }
+                // ]
             },
             disabled: false
         };
@@ -119,17 +128,8 @@ export default {
                 this.formData.taxRate = 22
             }
             this.$nextTick(() => {
-                this.$refs.priceRef.$el.querySelector('input').focus();
+                this.$refs.inputRef1.$el.querySelector('input').focus();
             })
-        },
-    
-        // 价格
-        priceKeydown (event) {
-            if (event.key === 'Tab') {
-                this.$refs.taxRateRef.$el.querySelector('input').focus();
-            } else if (event.key === 'Enter') {
-                this.submitForm()
-            }
         },
         
         // 验证表单
@@ -157,7 +157,24 @@ export default {
             // 重置表单
             this.resetForm('ruleForm')
             this.$emit('parent-close')
-        }
+        },
+    
+        // 监听按键
+        inputKeydown(event, index) {
+            if (!event.ctrlKey && event.key === 'Tab') {
+                event.preventDefault();
+                // 下移
+                const nextRef = index >= 2 ? 'inputRef2' : `inputRef${index + 1}`
+                this.$refs[nextRef].$el.querySelector('input').focus();
+            } else if (event.ctrlKey && event.key === 'Tab') {
+                // 上移
+                const prevRef = index <= 0 ?  'inputRef0' : `inputRef${index - 1}`
+                this.$refs[prevRef].$el.querySelector('input').focus();
+            } else if (!event.ctrlKey && event.key === 'Enter') {
+                // 提交表单
+                this.submitForm()
+            }
+        },
     },
     // 创建完成
     created() {

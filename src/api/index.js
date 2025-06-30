@@ -425,8 +425,8 @@ export const cancelOrderRounding = (params) => {
 export const queryVoucherUseState = (params) => {
     return http({
         url: '/api/v1/order/refund/voucher/bound',
-        method: 'get',
-        params
+        method: 'post',
+        data: params
     })
 }
 
@@ -448,7 +448,7 @@ export const checkSession = (params) => {
  * @param params
  * @returns {*}
  */
-export const queryOrderList = (params) => {
+export const queryOrderPage = (params) => {
     return http({
         url: '/api/v1/order/page',
         method: 'post',
@@ -464,8 +464,8 @@ export const queryOrderList = (params) => {
 export const queryOrderDetail = (params) => {
     return http({
         url: '/api/v1/order/detail',
-        method: 'get',
-        params
+        method: 'post',
+        data: params
     })
 }
 
@@ -513,11 +513,11 @@ export const queryCashierList = (params) => {
  * @param params
  * @returns {*}
  */
-export const queryRefundList = (params) => {
+export const queryRefundPage = (params) => {
     return http({
-        url: '/api/v1/order/refund/list',
-        method: 'get',
-        params
+        url: '/api/v1/order/refund/page',
+        method: 'post',
+        data: params
     })
 }
 
@@ -539,11 +539,11 @@ export const queryRefundDetail = (params) => {
  * @param params
  * @returns {*}
  */
-export const queryVoucherList = (params) => {
+export const queryVoucherPage = (params) => {
     return http({
-        url: '/api/v1/order/refund/voucher/list',
-        method: 'get',
-        params
+        url: '/api/v1/order/refund/voucher/page',
+        method: 'post',
+        data: params
     })
 }
 
@@ -1000,5 +1000,76 @@ export const queryDojoConfig = () => {
     return http({
         url: '/api/v1/pay/dojo/setting',
         method: 'post'
+    })
+}
+
+/**
+ * 查询支付记录
+ * @param params
+ * type: 101:找钱机  102:POS机
+ * @returns {*}
+ */
+export const queryPaymentRecord = (params) => {
+    return http({
+        url: '/api/v1/cashier/payment/record/search',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 创建支付记录
+ * @param params
+ * type: 101:找钱机  102:POS机
+ * payAmount: 支付金额
+ * @returns {*}
+ */
+export const createPaymentRecord = (params) => {
+    return http({
+        url: '/api/v1/cashier/payment/record/create',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 创建会话退货
+ * @param params
+ * type: 101:找钱机  102:POS机
+ * payAmount: 支付金额
+ * @returns {*}
+ */
+export const createSessionRefund = (params) => {
+    return http({
+        url: '/api/v1/cashier/session/refund',
+        method: 'post',
+        data: params
+    })
+}
+
+/**
+ * 打印订单PDF
+ * @param data
+ * @returns {*}
+ */
+export function printOrderPdf(params) {
+    return http({
+        url: '',
+        method: 'post',
+        responseType: 'blob',
+        data: params
+    });
+}
+
+/**
+ * 创建会话退货
+ * @param params
+ * @returns {*}
+ */
+export const queryVoucherRecord = (params) => {
+    return http({
+        url: '/api/v1/order/refund/voucher/detail',
+        method: 'post',
+        data: params
     })
 }

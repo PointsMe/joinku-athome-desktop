@@ -90,11 +90,20 @@
                         @clear="clearMember">
                     </el-input>
                 </div>
+                <!--<div class="search-item">-->
+                <!--    <el-input-->
+                <!--        v-model="search.number"-->
+                <!--        clearable-->
+                <!--        :placeholder="$t('orderNo')"-->
+                <!--        @input.native="inputDebounce"-->
+                <!--        @clear="searchHandle">-->
+                <!--    </el-input>-->
+                <!--</div>-->
                 <div class="search-item">
                     <el-input
-                        v-model="search.number"
+                        v-model="search.receiptNumber"
                         clearable
-                        :placeholder="$t('orderNo')"
+                        :placeholder="$t('invoiceNo') + ' / ' + $t('taxNo')"
                         @input.native="inputDebounce"
                         @clear="searchHandle">
                     </el-input>
@@ -249,7 +258,7 @@
 import SelectMember from "@/components/SelectMember";
 import Detail from "@/components/order/Detail"
 import Invoice from "@/components/pay/Invoice";
-import {deleteOrder, queryCashierList, queryOrderList} from "@/api";
+import {deleteOrder, queryCashierList, queryOrderPage} from "@/api";
 
 import moment from "moment";
 import {Debounce} from "@/utils/common";
@@ -313,6 +322,7 @@ export default {
                 memberName: '',
                 memberId: '',
                 number: '',
+                receiptNumber: '',
                 barcode: '',
                 startedAt: '',
                 endedAt: '',
@@ -449,13 +459,14 @@ export default {
                 cashierId: this.search.cashierId,
                 memberId: this.search.memberId,
                 number: this.search.number.trim(),
+                receiptNumber: this.search.receiptNumber.trim(),
                 barcode: this.search.barcode.trim(),
                 startedAt: this.search.startedAt,
                 endedAt: this.search.endedAt,
                 page: this.currentPage,
                 size: this.pageSize
             }
-            queryOrderList(params).then(res => {
+            queryOrderPage(params).then(res => {
                 if (res.code === 20000) {
                     this.total = res.data.total
                     this.tableData = res.data.list || []

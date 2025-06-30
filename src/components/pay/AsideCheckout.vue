@@ -55,19 +55,26 @@
                                 @input="cashInput"
                                 @keydown.native="(e) => paymentKeydown(e, 'cash')"
                                 clearable>
-                                <template slot="prepend">{{ $t('cash') }}</template>
+                                <el-button slot="prepend" @click="cashPayHandle">{{ $t('cash') }}</el-button>
+                                <!--<i class="el-icon-circle-close" slot="append"></i>-->
                             </el-input>
                         </div>
-                        <div class="item">
+                        <div class="item item-row">
                             <el-input
                                 v-model="cardAmount"
                                 ref="cardRef"
+                                :readonly="dojoPay"
+                                :clearable="!dojoPay"
                                 @input="cardInput"
                                 @focus="paymentFocus('card')"
-                                @keydown.native="(e) => paymentKeydown(e, 'card')"
-                                clearable>
-                                <template slot="prepend">{{ $t('swipingCard') }}</template>
+                                @keydown.native="(e) => paymentKeydown(e, 'card')">
+                                <el-button slot="prepend" @click="cardPayHandle">{{ $t('swipingCard') }}</el-button>
+                                <i class="iconfont icon-swiping-card" slot="append" @click="fullAmountCardPay" v-if="dojoPay"></i>
+                                <!--<i class="el-icon-circle-close" slot="append" v-else></i>-->
                             </el-input>
+                            <!--<a href="javascript:void(0)" class="icon">-->
+                            <!--    <i class="iconfont icon-swiping-card"></i>-->
+                            <!--</a>-->
                         </div>
                         <div class="item" v-if="paymodes.includes(106)">
                             <el-input
@@ -122,8 +129,8 @@
                         </div>
                     </div>
                     <div class="closing">
-                        <span>{{ $t('giveChange') }}</span>
-                        <span>{{ roundingAmount | filteFloat }}</span>
+                        <span class="label">{{ $t('giveChange') }}</span>
+                        <span class="value">{{ roundingAmount | filteFloat }}</span>
                     </div>
                 </div>
                 <div class="payment-right">
@@ -217,7 +224,7 @@
         <OrderDiscount
             :showDialog="discountDialog"
             :finalAmount="finalAmount"
-            @parent-update="updateOrder(false)"
+            @parent-update="updateOrder()"
             @parent-close="discountDialog = false"/>
         <!-- 发票 -->
         <Invoice
@@ -229,8 +236,20 @@
         <OrderRemark
             :showDialog="remarkDialog"
             :orderRemark="orderRemark"
-            @parent-update="updateOrder(true)"
+            @parent-update="updateOrder()"
             @parent-close="remarkDialog = false"/>
+        <!-- 金额计算 -->
+        <AmountCalculate
+            :showDialog="amountDialog"
+            :amountType="amountType"
+            @parent-update="amountCalculateUpdate"
+            @parent-close="amountDialog = false"/>
+        <!-- 刷卡金额 -->
+        <SwipingCard
+            :showDialog="cardDialog"
+            :roundingAmount="roundingAmount"
+            @parent-update="partAmountCardPay"
+            @parent-close="cardDialog = false"/>
         <!-- 刷卡支付 -->
         <CardPay
             :showDialog="posPayDialog"
@@ -249,21 +268,24 @@ import OrderDiscount from "@/components/pay/OrderDiscount";
 import Invoice from "@/components/pay/Invoice";
 // 订单备注
 import OrderRemark from "@/components/pay/OrderRemark";
+// 金额计算
+import AmountCalculate from "@/components/pay/AmountCalculate";
+// 刷卡金额
+import SwipingCard from "@/components/pay/SwipingCard";
 // 刷卡支付
 import CardPay from '@/components/pay/CardPay'
 import {mapMutations, mapState} from "vuex";
 import {
     Debounce,
-    formatFloat,
     formatFloatFloor,
     formatUseDot,
-    formatCalculateFloat
+    formatCalculateFloat, formatFloat, formatFloatRound, countPropertyTotal
 } from "@/utils/common";
 import {
     cancelOrderDiscount,
     cancelOrderRounding,
-    checkSession,
-    orderRounding,
+    checkSession, createPaymentRecord,
+    orderRounding, queryPaymentRecord,
     queryVoucherUseState
 } from "@/api";
 import {
@@ -272,9 +294,10 @@ import {
 } from "@/api/dojo";
 import moment from "moment";
 import {queryPrinterList} from "@/utils/ipc";
-import {validateFloat, validateZeroFloat} from "@/utils/validate";
+import {validateFloat, validateAmount} from "@/utils/validate";
 import {epsonTaxPrint} from "@/utils/printer";
 import uuidv4 from 'uuid/v4';
+import JsBarcode from "jsbarcode";
 export default {
     name: "AsideCheckout",
     // 组件
@@ -282,6 +305,8 @@ export default {
         OrderDiscount,
         Invoice,
         OrderRemark,
+        AmountCalculate,
+        SwipingCard,
         CardPay
     },
     props: {
@@ -305,7 +330,7 @@ export default {
             voucherBarcode: '',
             voucherList: [],
             unpaidAmount: '',
-            roundingAmount: 0,
+            roundingAmount: 0,    // 找零金额
             discountDialog: false,
             lotteryCode: '',
             preDisabled: false,
@@ -319,10 +344,14 @@ export default {
             isFirstBizum: true,
             isAuto: true,
             receiptType: 100,   // 票据类型  100：待开发票  101：税票   102：发票
-            posAmount: 0,
+            posId: '',    // pos机ID
+            posAmount: 0,     // pos机支付金额
             paymentIntentId: '',   // 支付意图ID
             paySessionId: '',   // 支付会话ID
             posPayDialog: false,
+            amountType: '',
+            amountDialog: false,
+            cardDialog: false,
         };
     },
     // 计算属性
@@ -337,6 +366,9 @@ export default {
             } else {
                 return 0
             }
+        },
+        dojoPay () {
+            return this.enabledDojo && !!this.posId
         }
     },
     // 监控data中的数据变化
@@ -366,19 +398,32 @@ export default {
             if (!this.orderData) return;
             this.finalAmount = formatFloatFloor(this.orderData.finalAmount)
             this.copeAmount = formatUseDot(this.finalAmount)
-            this.cashAmount = this.copeAmount
-            this.cardAmount = ''
-            this.bizumAmount = ''
-            this.ticketAmount = ''
-            this.voucherBarcode = ''
-            this.voucherList = []
-            this.unpaidAmount = ''
-            this.roundingAmount = 0
-            this.lotteryCode = ''
-            this.paymentType = 'cash'
-            this.$nextTick(() => {
+            if (this.dojoPay) {
+                const cardAmount = formatFloat(this.cardAmount)
+                const cashAmount = formatFloatRound(this.finalAmount - cardAmount)
+                this.cashAmount = formatUseDot(cashAmount)
+                this.bizumAmount = ''
+                this.ticketAmount = ''
+                this.voucherBarcode = ''
+                this.voucherList = []
+                this.unpaidAmount = ''
+                this.roundingAmount = 0
+                this.lotteryCode = ''
+                this.paymentType = 'cash'
                 this.$refs.cashRef.$el.querySelector('input').focus();
-            })
+            } else {
+                this.cashAmount = this.copeAmount
+                this.cardAmount = ''
+                this.bizumAmount = ''
+                this.ticketAmount = ''
+                this.voucherBarcode = ''
+                this.voucherList = []
+                this.unpaidAmount = ''
+                this.roundingAmount = 0
+                this.lotteryCode = ''
+                this.paymentType = 'cash'
+                this.$refs.cashRef.$el.querySelector('input').focus();
+            }
         },
         
         // 输入现金金额
@@ -411,12 +456,21 @@ export default {
                     type: 'warning'
                 });
                 this.voucherBarcode = ''
-                return
+                return;
             }
-            this.getVoucherDetail(this.voucherBarcode)
+            if (this.roundingAmount >= 0) {
+                this.$message({
+                    showClose: true,
+                    message: this.$t('vouDisable'),
+                    type: 'warning'
+                });
+                this.voucherBarcode = ''
+                return;
+            }
+            this.getVoucherState(this.voucherBarcode)
         }, 300),
         // 获取抵用券详情
-        getVoucherDetail (barcode) {
+        getVoucherState (barcode) {
             let params = {
                 id: barcode
             }
@@ -435,7 +489,7 @@ export default {
                     this.voucherList.push({
                         id: res.data.id,
                         amount: res.data.amount,
-                        name: `${res.data.id} (${amountValue}€)`
+                        name: `${res.data.id} (€${amountValue})`
                     })
                     this.calcRounding();
                 } else {
@@ -468,20 +522,26 @@ export default {
             const bizumAmount = formatFloatFloor(this.bizumAmount)
             const ticketAmount = formatFloatFloor(this.ticketAmount)
             const unpaidAmount = formatFloatFloor(this.unpaidAmount)
-            const voucherAmount = this.voucherList.reduce((pre, next) => {
-                return pre + next.amount;
-            }, 0)
+            let voucherAmount = countPropertyTotal(this.voucherList, 'amount')
+            voucherAmount = formatCalculateFloat(voucherAmount)
             const finalAmount = formatFloatFloor(this.orderData.finalAmount)
             // 找零
             const roundingAmount = cashAmount + cardAmount + bizumAmount + ticketAmount + unpaidAmount + voucherAmount - finalAmount
-            this.roundingAmount = formatCalculateFloat(roundingAmount)
+            this.roundingAmount = formatFloatRound(roundingAmount)
         },
     
         // 支付框按键按下
         paymentKeydown (event, type) {
             if(event.key === 'Tab') {
+                let currentAmount = 0
                 this.cashAmount = ''
-                this.cardAmount = ''
+                if (this.dojoPay) {
+                    const cardAmount = formatFloat(this.cardAmount)
+                    currentAmount = formatUseDot(this.finalAmount - cardAmount)
+                } else {
+                    this.cardAmount = ''
+                    currentAmount = this.copeAmount
+                }
                 this.bizumAmount = ''
                 this.ticketAmount = ''
                 this.voucherBarcode = ''
@@ -489,15 +549,15 @@ export default {
                 this.unpaidAmount = ''
                 this.roundingAmount = 0
                 if (type === 'cash') {
-                    this.cashAmount = this.copeAmount
+                    this.cashAmount = currentAmount
                 } else if (type === 'card') {
-                    this.cardAmount = this.copeAmount
+                    this.cardAmount = currentAmount
                 } else if (type === 'bizum') {
-                    this.bizumAmount = this.copeAmount
+                    this.bizumAmount = currentAmount
                 } else if (type === 'ticket') {
-                    this.ticketAmount = this.copeAmount
+                    this.ticketAmount = currentAmount
                 } else if (type === 'unpaid') {
-                    this.unpaidAmount = this.copeAmount
+                    this.unpaidAmount = currentAmount
                 }
             } else if (event.key === 'Enter') {
                 if(this.preDisabled) return;
@@ -514,7 +574,7 @@ export default {
                         message: res.msg,
                         type: 'success'
                     })
-                    this.updateOrder(false)
+                    this.updateOrder()
                 } else {
                     this.$message({
                         showClose: true,
@@ -536,7 +596,7 @@ export default {
                         message: res.msg,
                         type: 'success'
                     })
-                    this.updateOrder(false)
+                    this.updateOrder()
                 } else {
                     this.$message({
                         showClose: true,
@@ -557,7 +617,7 @@ export default {
                         message: res.msg,
                         type: 'success'
                     })
-                    this.updateOrder(false)
+                    this.updateOrder()
                 } else {
                     this.$message({
                         showClose: true,
@@ -577,7 +637,7 @@ export default {
             this.remarkDialog = true
         },
         
-        // 预打校验
+        // 预打校验  100
         prePressCheck () {
             let { payments, vouchers } = this.disposePayments()
             let params = {
@@ -607,8 +667,13 @@ export default {
                         payments,
                         roundingAmount: this.roundingAmount
                     })
+                    // 生成抵用券
+                    if (res.data.voucher) {
+                        const expires = res.data.voucher.expires ? moment(res.data.voucher.expires).format('DD/MM/YYYY HH:mm') : ''
+                        this.createBarcode(res.data.voucher.id, res.data.voucher.amount, expires)
+                    }
                     // 更新订单
-                    this.updateOrder(false)
+                    this.updateOrder()
                     // 关闭买单
                     this.closeCheckout()
                 } else {
@@ -691,6 +756,7 @@ export default {
                 finalAmount: formatFloatFloor(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 member: this.orderData.member,
+                enableAliasPrint: this.orderData.cashierSetting.enableAliasPrint
             }
             queryPrinterList().then(res => {
                 if (res.length !== 0) {
@@ -731,7 +797,135 @@ export default {
             })
         },
     
-        // 发票校验
+        // 税票校验  101
+        taxCheck () {
+            let { payments, vouchers } = this.disposePayments()
+            let params = {
+                receipt: 101,
+                payments
+            }
+            if (vouchers.length > 0) {
+                params.vouchers = vouchers
+            }
+            this.preDisabled = true
+            checkSession(params).then(res => {
+                if (res.code === 20000) {
+                    // 开钱箱
+                    this.$emit('open-cashbox')
+                    // 打印
+                    if (this.shopInfo.countryCode === 'ES') {
+                        if (this.roundingAmount > 0) {
+                            this.prePressPrint([...payments, {
+                                paymode: 110,
+                                amount: this.roundingAmount
+                            }], 'tax', res.data.receiptNumber)
+                        } else {
+                            this.prePressPrint(payments, 'tax', res.data.receiptNumber)
+                        }
+                    } else {
+                        this.taxPrint();
+                    }
+                    // 保存买单信息
+                    this.saveRecordPayment({
+                        finalAmount: formatFloatFloor(this.orderData.finalAmount),
+                        payments,
+                        roundingAmount: this.roundingAmount
+                    })
+                    // 生成抵用券
+                    if (res.data.voucher) {
+                        const expires = res.data.voucher.expires ? moment(res.data.voucher.expires).format('DD/MM/YYYY HH:mm') : ''
+                        this.createBarcode(res.data.voucher.id, res.data.voucher.amount, expires)
+                    }
+                    // 更新订单
+                    this.updateOrder()
+                    // 关闭买单
+                    this.closeCheckout()
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: res.msg,
+                        type: 'error'
+                    })
+                }
+            }).catch(err => {
+                this.$message.error(err);
+            }).finally(() => {
+                this.preDisabled = false
+            })
+        },
+        taxPrint () {
+            let taxPrinterType = localStorage.getItem("taxPrinterType")
+            let taxPrinterIp = localStorage.getItem("taxPrinterIp")
+            if (!taxPrinterType) {
+                this.$message({
+                    showClose: true,
+                    message: this.$t('noSelTax'),
+                    type: 'warning'
+                });
+                return
+            }
+            // 商品
+            let items = []
+            this.productList.forEach(item => {
+                if (item.ifRuleDiscountItem) {
+                    let newList = item.prices.map(inItem => {
+                        return {
+                            ...item,
+                            originalPrice: item.sellPrice,
+                            finalPrice: inItem.price,
+                            settlePrice: inItem.price,
+                            count: inItem.count,
+                            finalAmount: inItem.total
+                        }
+                    })
+                    items = [...items, ...newList]
+                } else {
+                    items.push({
+                        ...item,
+                        originalPrice: item.sellPrice
+                    })
+                }
+            })
+            let voucherAmount = countPropertyTotal(this.voucherList, 'amount')
+            let orderData = JSON.parse(JSON.stringify(this.orderData))
+            let taxData = {
+                shopId: this.shopInfo.id,
+                items,
+                cashAmount: formatFloatFloor(this.cashAmount),
+                cardAmount: formatFloatFloor(this.cardAmount),
+                bizumAmount: formatFloatFloor(this.bizumAmount),
+                ticketAmount: formatFloatFloor(this.ticketAmount),
+                unpaidAmount: formatFloatFloor(this.unpaidAmount),
+                voucherAmount: formatCalculateFloat(voucherAmount),
+                discountAmount: orderData.orderDiscountAmount, // 打折金额
+                lotteryCode: this.lotteryCode,
+                writeType: taxPrinterType,
+                enableAliasPrint: orderData.cashierSetting.enableAliasPrint
+            };
+            if (taxPrinterType === 'epsonWeb') {
+                if (!taxPrinterIp) {
+                    this.$message({
+                        showClose: true,
+                        message: this.$t('noTaxIp'),
+                        type: 'warning'
+                    });
+                    return;
+                }
+                this.$epsonPrinter.taxPrint(taxPrinterIp, taxData).then((dt) => {
+                    if (!dt) {
+                        // 打印失败
+                        this.$alert(this.$t('hintPrinterError'), this.$t('hint'), {
+                            confirmButtonText: this.$t('confirm'),
+                            callback: action => {}
+                        });
+                    }
+                });
+            } else if (taxPrinterType === 'epson') {
+                epsonTaxPrint(taxData)
+            }
+        },
+        
+        // 发票校验  102
         invoiceCheck (invoiceBuyer) {
             let { payments, vouchers } = this.disposePayments()
             let params = {
@@ -772,8 +966,13 @@ export default {
                         payments,
                         roundingAmount: this.roundingAmount
                     })
+                    // 生成抵用券
+                    if (res.data.voucher) {
+                        const expires = res.data.voucher.expires ? moment(res.data.voucher.expires).format('DD/MM/YYYY HH:mm') : ''
+                        this.createBarcode(res.data.voucher.id, res.data.voucher.amount, expires)
+                    }
                     // 更新订单
-                    this.updateOrder(false)
+                    this.updateOrder()
                     // 关闭买单
                     this.closeCheckout()
                 } else {
@@ -864,7 +1063,8 @@ export default {
                 finalAmount: formatFloatFloor(this.orderData.finalAmount),
                 time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
                 invoiceData,
-                member: this.orderData.member
+                member: this.orderData.member,
+                enableAliasPrint: this.orderData.cashierSetting.enableAliasPrint
             }
             queryPrinterList().then(res => {
                 if (res.length !== 0) {
@@ -904,147 +1104,22 @@ export default {
                 }
             })
         },
-    
-        // 税票校验
-        taxCheck () {
-            let { payments, vouchers } = this.disposePayments()
-            let params = {
-                receipt: 101,
-                payments
-            }
-            if (vouchers.length > 0) {
-                params.vouchers = vouchers
-            }
-            this.preDisabled = true
-            checkSession(params).then(res => {
-                if (res.code === 20000) {
-                    // 开钱箱
-                    this.$emit('open-cashbox')
-                    // 打印
-                    if (this.shopInfo.countryCode === 'ES') {
-                        if (this.roundingAmount > 0) {
-                            this.prePressPrint([...payments, {
-                                paymode: 110,
-                                amount: this.roundingAmount
-                            }], 'tax', res.data.receiptNumber)
-                        } else {
-                            this.prePressPrint(payments, 'tax', res.data.receiptNumber)
-                        }
-                    } else {
-                        this.taxPrint();
-                    }
-                    // 保存买单信息
-                    this.saveRecordPayment({
-                        finalAmount: formatFloatFloor(this.orderData.finalAmount),
-                        payments,
-                        roundingAmount: this.roundingAmount
-                    })
-                    // 更新订单
-                    this.updateOrder(false)
-                    // 关闭买单
-                    this.closeCheckout()
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
-            }).catch(err => {
-                this.$message.error(err);
-            }).finally(() => {
-                this.preDisabled = false
-            })
-        },
-        taxPrint () {
-            let taxPrinterType = localStorage.getItem("taxPrinterType")
-            let taxPrinterIp = localStorage.getItem("taxPrinterIp")
-            if (!taxPrinterType) {
-                this.$message({
-                    showClose: true,
-                    message: this.$t('noSelTax'),
-                    type: 'warning'
-                });
-                return
-            }
-            // 商品
-            let items = []
-            this.productList.forEach(item => {
-                if (item.ifRuleDiscountItem) {
-                    let newList = item.prices.map(inItem => {
-                        return {
-                            ...item,
-                            originalPrice: item.sellPrice,
-                            finalPrice: inItem.price,
-                            settlePrice: inItem.price,
-                            count: inItem.count,
-                            finalAmount: inItem.total
-                        }
-                    })
-                    items = [...items, ...newList]
-                } else {
-                    items.push({
-                        ...item,
-                        originalPrice: item.sellPrice
-                    })
-                }
-            })
-            const voucherAmount = this.voucherList.reduce((pre, next) => {
-                return pre + next.amount;
-            }, 0)
-            let orderData = JSON.parse(JSON.stringify(this.orderData))
-            let taxData = {
-                shopId: this.shopInfo.id,
-                items,
-                cashAmount: formatFloatFloor(this.cashAmount),
-                cardAmount: formatFloatFloor(this.cardAmount),
-                bizumAmount: formatFloatFloor(this.bizumAmount),
-                ticketAmount: formatFloatFloor(this.ticketAmount),
-                unpaidAmount: formatFloatFloor(this.unpaidAmount),
-                voucherAmount: formatCalculateFloat(voucherAmount),
-                discountAmount: orderData.orderDiscountAmount, // 打折金额
-                lotteryCode: this.lotteryCode,
-                writeType: taxPrinterType,
-                enableAliasPrint: orderData.cashierSetting.enableAliasPrint
-            };
-            if (taxPrinterType === 'epsonWeb') {
-                if (!taxPrinterIp) {
-                    this.$message({
-                        showClose: true,
-                        message: this.$t('noTaxIp'),
-                        type: 'warning'
-                    });
-                    return;
-                }
-                this.$epsonPrinter.taxPrint(taxPrinterIp, taxData).then((dt) => {
-                    if (!dt) {
-                        // 打印失败
-                        this.$alert(this.$t('hintPrinterError'), this.$t('hint'), {
-                            confirmButtonText: this.$t('confirm'),
-                            callback: action => {}
-                        });
-                    }
-                });
-            } else if (taxPrinterType === 'epson') {
-                epsonTaxPrint(taxData)
-            }
-        },
-    
+        
         // 校验支付方式
         checkPayments () {
-            if (this.cashAmount && !validateZeroFloat(this.cashAmount)) {
+            if (this.cashAmount && !validateAmount(this.cashAmount)) {
                 return false
             }
-            if (this.cardAmount && !validateZeroFloat(this.cardAmount)) {
+            if (this.cardAmount && !validateAmount(this.cardAmount)) {
                 return false
             }
-            if (this.bizumAmount && !validateZeroFloat(this.bizumAmount)) {
+            if (this.bizumAmount && !validateAmount(this.bizumAmount)) {
                 return false
             }
-            if (this.ticketAmount && !validateZeroFloat(this.ticketAmount)) {
+            if (this.ticketAmount && !validateAmount(this.ticketAmount)) {
                 return false
             }
-            if (this.unpaidAmount && !validateZeroFloat(this.unpaidAmount)) {
+            if (this.unpaidAmount && !validateAmount(this.unpaidAmount)) {
                 return false
             }
             return true
@@ -1091,9 +1166,7 @@ export default {
             // 抵用券
             let vouchers = []
             if (this.voucherList.length > 0) {
-                const voucherAmount = this.voucherList.reduce((pre, next) => {
-                    return pre + next.amount;
-                }, 0)
+                let voucherAmount = countPropertyTotal(this.voucherList, 'amount')
                 vouchers = this.voucherList.map(item => {
                     return {
                         voucherId: item.id
@@ -1122,6 +1195,79 @@ export default {
                 acc[groupKey].push(item);
                 return acc;
             }, {});
+        },
+    
+        // 生成条形码
+        createBarcode (code, price, expires) {
+            if (!code) return ''
+            let barcodeOptions = {
+                format: "CODE128",//条形码的格式
+                width: 1.5,//线宽
+                height: 60,//条码高度
+                displayValue: true,//是否显示文字
+                fontSize: 20,//设置文本的大小
+                fontOptions: "bold",
+                textMargin: 2,
+                lineColor: "#000000", // 线条和字体颜色
+                margin: 5 //设置条形码周围的空白区域
+            }
+            const canvas = document.createElement("canvas");
+            JsBarcode(canvas, code, barcodeOptions);
+            const url = canvas.toDataURL("image/png");
+            this.printBarcode(url, price, expires)
+        },
+        // 打印条形码
+        printBarcode (url, price, expires) {
+            queryPrinterList().then(res => {
+                if (res.length !== 0) {
+                    const defaultPrinter = res.find(item => item.isDefault)
+                    if (defaultPrinter !== undefined) {
+                        this.savePrinterName(defaultPrinter.name)
+                    }
+                    let printData = {
+                        name: this.shopInfo.name,
+                        company: this.shopInfo.companyName || '',
+                        address: this.shopInfo.address,
+                        pcg: `${this.shopInfo.zipcode} ${this.shopInfo.city} ${this.shopInfo.provinceName}`,
+                        country: this.shopInfo.countryName,
+                        vatNumber: this.shopInfo.vatNumber,
+                        taxCode: this.shopInfo.taxCode,
+                        contactPhone: this.shopInfo.contactPhone,
+                        price,
+                        img: url,
+                        time: moment(new Date()).format('DD/MM/YYYY HH:mm'),
+                        expires
+                    }
+                    if (this.shopInfo.countryCode === 'IT') {
+                        let webview = document.querySelector('#printBarcodeIt')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ZH') {
+                        let webview = document.querySelector('#printBarcodeZh')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'EN') {
+                        let webview = document.querySelector('#printBarcodeEn')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'FR') {
+                        let webview = document.querySelector('#printBarcodeFr')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'DE') {
+                        let webview = document.querySelector('#printBarcodeDe')
+                        webview.send('webview-print-render', printData)
+                    } else if (this.shopInfo.countryCode === 'ES' || this.shopInfo.countryCode === 'CA') {
+                        let webview = document.querySelector('#printBarcodeEs');
+                        webview.send('webview-print-render', printData); //将数据发送至webview
+                    } else {
+                        let webview = document.querySelector('#printBarcodeEn')
+                        webview.send('webview-print-render', printData)
+                    }
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: this.$t('notPrinter'),
+                        type: 'error'
+                    })
+                }
+            })
         },
     
         // 当前支付方式
@@ -1203,10 +1349,14 @@ export default {
                     this.isFirstCash = true
                     break;
                 case 'card':
-                    this.paymentType = type
-                    this.$refs.cardRef.$el.querySelector('input').focus();
-                    this.cardAmount = this.calcRemainAmount()
-                    this.isFirstCard = true
+                    if (this.dojoPay) {
+                        this.cardPayHandle()
+                    } else {
+                        this.paymentType = type
+                        this.$refs.cardRef.$el.querySelector('input').focus();
+                        this.cardAmount = this.calcRemainAmount()
+                        this.isFirstCard = true
+                    }
                     break;
                 case 'bizum':
                     if (!this.paymodes.includes(106)) return;
@@ -1259,13 +1409,12 @@ export default {
             const bizumAmount = formatFloatFloor(this.bizumAmount)
             const ticketAmount = formatFloatFloor(this.ticketAmount)
             const unpaidAmount = formatFloatFloor(this.unpaidAmount)
-            const voucherAmount = this.voucherList.reduce((pre, next) => {
-                return pre + next.amount;
-            }, 0)
+            let voucherAmount = countPropertyTotal(this.voucherList, 'amount')
+            voucherAmount = formatCalculateFloat(voucherAmount)
             const finalAmount = formatFloatFloor(this.orderData.finalAmount)
             // 剩余金额
             const roundingAmount = finalAmount - cashAmount - cardAmount - bizumAmount - ticketAmount - unpaidAmount - voucherAmount
-            return formatCalculateFloat(roundingAmount)
+            return formatFloatRound(roundingAmount)
         },
     
         // 抹零
@@ -1301,14 +1450,15 @@ export default {
                 });
                 return
             }
-            // pos机ID
-            const posId = localStorage.getItem("posId")
-            if (this.cardAmount && formatFloatFloor(this.cardAmount) > 0 && this.enabledDojo && !!posId) {
-                this.receiptType = type
-                this.posAmount = formatFloatFloor(this.cardAmount)
-                this.getTerminalStatus()
-                // this.startPosPay()
-                return;
+            let voucherAmount = countPropertyTotal(this.voucherList, 'amount')
+            voucherAmount = formatCalculateFloat(voucherAmount)
+            if (voucherAmount >= this.finalAmount && formatFloatRound(voucherAmount - this.finalAmount) !== this.roundingAmount) {
+                this.$message({
+                    showClose: true,
+                    message: this.$t('vouDisable'),
+                    type: 'warning'
+                });
+                return
             }
             if (type === 100) {
                 // 预打
@@ -1321,11 +1471,58 @@ export default {
                 this.cellInvoice()
             }
         },
+       
+        // 发票
+        cellInvoice () {
+            this.memberId = this.orderData && this.orderData.member ? this.orderData.member.id : ''
+            this.invoiceDialog = true
+        },
+        // 整单折扣
+        cellDiscount () {
+            if (!this.perms.includes('cs.ord.off')) return;
+            this.discountDialog = true
+        },
+        // 现金支付
+        cashPayHandle () {
+            this.amountType = 'cash'
+            this.amountDialog = true
+        },
+        // 刷卡支付
+        cardPayHandle () {
+            if (this.dojoPay) {
+                this.posAmount = this.roundingAmount
+                this.cardDialog = true
+            } else {
+                this.amountType = 'card'
+                this.amountDialog = true
+            }
+        },
+        // 更新金额
+        amountCalculateUpdate (amount) {
+            if (this.amountType === 'cash') {
+                this.cashAmount = formatUseDot(amount)
+            } else if (this.amountType === 'card') {
+                this.cardAmount = formatUseDot(amount)
+            }
+        },
+        // 部分刷卡支付
+        partAmountCardPay (amount) {
+            this.posAmount = amount
+            this.getTerminalStatus()
+        },
+        // 全额刷卡支付
+        fullAmountCardPay () {
+            if (this.cardAmount) {
+                this.posAmount = formatFloatRound(this.finalAmount - formatFloat(this.cardAmount))
+            } else {
+                this.posAmount = this.finalAmount
+            }
+            this.getTerminalStatus()
+        },
         // 获取终端状态
         getTerminalStatus () {
-            const terminalId = localStorage.getItem("posId")
             this.preDisabled = true
-            queryTerminalStatus(terminalId).then(res => {
+            queryTerminalStatus(this.posId).then(res => {
                 const status = res.status
                 if (status === 'Available') {
                     this.startPosPay()
@@ -1370,11 +1567,10 @@ export default {
                 this.preDisabled = false
             })
         },
-        
         // 创建支付会话
         startPaySession () {
             let params = {
-                terminalId: localStorage.getItem("posId"),
+                terminalId: this.posId,
                 details: {
                     sale: {
                         paymentIntentId: this.paymentIntentId
@@ -1393,35 +1589,45 @@ export default {
                 this.preDisabled = false
             })
         },
-        
-        // 支付成功
+        // 保存支付记录
         posPaySuccess () {
-            if (this.receiptType === 100) {
-                // 预打
-                this.prePressCheck()
-            } else if (this.receiptType === 101) {
-                // 税票
-                this.taxCheck()
-            } else if (this.receiptType === 102) {
-                // 发票
-                this.cellInvoice()
+            let params = {
+                type: 102,
+                payAmount: this.posAmount
             }
+            createPaymentRecord(params).then(res => {
+                const cardAmount = formatFloat(this.cardAmount)
+                this.cardAmount = formatUseDot(cardAmount + this.posAmount)
+                this.getPaymentRecord()
+            }).catch(err => {
+                this.$message.error(err);
+            })
         },
-       
-        // 发票
-        cellInvoice () {
-            this.memberId = this.orderData && this.orderData.member ? this.orderData.member.id : ''
-            this.invoiceDialog = true
-        },
-        // 整单折扣
-        cellDiscount () {
-            if (!this.perms.includes('cs.ord.off')) return;
-            this.discountDialog = true
+        // 获取支付记录
+        getPaymentRecord () {
+            let params = {
+                type: 102
+            }
+            queryPaymentRecord(params).then(res => {
+                if (Array.isArray(res.data)) {
+                    const totalAmount = countPropertyTotal(res.data, 'payAmount')
+                    if (totalAmount) {
+                        this.cardAmount = formatUseDot(totalAmount)
+                    } else {
+                        this.cardAmount = ''
+                    }
+                    this.$nextTick(() => {
+                        this.initPayAmount()
+                    })
+                }
+            }).catch(err => {
+                this.$message.error(err);
+            })
         },
         // 更新订单
-        updateOrder (b = false) {
+        updateOrder () {
             // 更新会话
-            this.$emit('session-update', b)
+            this.$emit('session-update')
         },
         
         // 关闭买单
@@ -1431,10 +1637,19 @@ export default {
     },
     // 创建完成
     created() {
+        // pos机ID
+        this.posId = localStorage.getItem("posId") || ''
     },
     // 挂载完成
     mounted() {
-        this.initPayAmount()
+        if (this.enabledDojo && !!this.posId) {
+            // 获取支付记录
+            this.getPaymentRecord()
+        } else {
+            this.$nextTick(() => {
+                this.initPayAmount()
+            })
+        }
     },
     // 组件被激活
     activated() {
@@ -1488,13 +1703,13 @@ export default {
                 display: flex;
                 justify-content: space-between;
                 .label{
-                    font-weight: 400;
-                    font-size: 25px;
+                    font-weight: 500;
+                    font-size: 30px;
                     color: #000000;
                 }
                 .value{
-                    font-weight: 400;
-                    font-size: 25px;
+                    font-weight: 500;
+                    font-size: 30px;
                     color: #000000;
                     .value-hint{
                         margin-right: 6px;
@@ -1516,6 +1731,7 @@ export default {
                         margin-bottom: 12px;
                         ::v-deep .el-input {
                             width: 100%;
+                            //width: calc(100% - 50px);
                             height: 50px;
                             background: #FFFFFF;
                             .el-input-group__prepend{
@@ -1538,6 +1754,20 @@ export default {
                                 color: #000000;
                                 text-align: right;
                             }
+                            .el-input-group__append{
+                                width: 50px;
+                                padding: 0;
+                                text-align: center;
+                                background-color: transparent;
+                                i{
+                                    font-size: 30px;
+                                    color: #000000;
+                                    cursor: pointer;
+                                }
+                                .iconfont{
+                                    color: #146043;
+                                }
+                            }
                         }
                         .vouchers{
                             width: 100%;
@@ -1555,6 +1785,25 @@ export default {
                                 }
                             }
                         }
+                        &.item-row{
+                            ::v-deep .el-input {
+                                .el-input__inner{
+                                    border-right: none;
+                                }
+                            }
+                            .icon{
+                                width: 50px;
+                                height: 50px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                .iconfont{
+                                    font-size: 26px;
+                                    color: #146043;
+                                    font-weight: 500;
+                                }
+                            }
+                        }
                     }
                 }
                 .closing{
@@ -1564,9 +1813,12 @@ export default {
                     align-items: center;
                     justify-content: space-between;
                     span{
-                        font-weight: 400;
-                        font-size: 20px;
+                        font-weight: 500;
+                        font-size: 24px;
                         color: #000000;
+                    }
+                    .value{
+                        color: #FF0000;
                     }
                 }
             }

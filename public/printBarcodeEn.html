@@ -6,15 +6,21 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>条码</title>
     <style>
-        div, p, span{
-            padding: 0;
-            margin: 0;
-            box-sizing: border-box;
+        @page{
+            margin: 0.2cm;
         }
         body{
             font-size: 10pt;
             font-family: "Segoe UI", "Calibri", "Arial", "Times New Roman", sans-serif;
             color: #000000;
+        }
+        div, p, span{
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        i{
+            font-style: normal;
         }
         .container{
             padding-left: 3pt;
@@ -83,6 +89,9 @@
         html += '<div class="barcode">'+
                 "<img src="+ data.img +">"+
                 '</div>'
+        if (data.expires) {
+            html += '<p class="align-c">Validity ' + data.expires + '</p>'
+        }
         html += '<p class="align-c">' + data.time + '</p>'
         html += '<p class="blank"></p>';
         html += '<p class="blank"></p>';

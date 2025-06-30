@@ -39,10 +39,23 @@
                             </template>
                         </el-table-column>
                         <el-table-column
+                            prop="name"
+                            :label="$t('discountPer')"
+                            show-overflow-tooltip
+                            align="center"
+                            min-width="110">
+                            <template slot-scope="scope">
+                                <span v-if="scope.row.finalPrice !== scope.row.sellPrice">
+                                    {{ discountPercent(scope.row.sellPrice, scope.row.finalPrice) }}
+                                </span>
+                                <span v-else>-</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
                             prop="count"
                             :label="$t('number')"
                             align="center"
-                            min-width="120">
+                            min-width="110">
                             <template slot-scope="scope">
                                 <a
                                     href="javascript:void(0)"
@@ -156,7 +169,13 @@ import FooterCheckout from "@/components/pay/FooterCheckout";
 import ProductEdit from "@/components/product/Edit"
 
 import {queryCurrentSession, updateCartProduct} from "@/api";
-import {countPropertyTotal, decimalMinusRound, decimalTimesRound, formatFloatFloor} from "@/utils/common";
+import {
+    countPropertyTotal,
+    decimalMinusRound,
+    decimalTimesRound,
+    formatFloatFloor,
+    formatFloatRound
+} from "@/utils/common";
 import {mapMutations, mapState} from "vuex";
 import {epsonCashBox} from "@/utils/printer";
 import {normalOpenCashbox} from "@/utils/ipc";
@@ -233,6 +252,9 @@ export default {
         finalAmount (val) {
             if (this.pageType === 'checkout') {
                 this.writeDisplayMoney(val)
+                this.$nextTick(() => {
+                    this.$refs.asideRef.initPayAmount()
+                })
             }
         }
     },
@@ -249,7 +271,7 @@ export default {
             }
         },
         // 获取当前会话
-        getCurrentSession (b = false) {
+        getCurrentSession () {
             queryCurrentSession().then(res => {
                 if (Number(res.code) === 20000) {
                     let items = res.data.items || []
@@ -320,10 +342,6 @@ export default {
                         this.$refs.asideRef.productHandleType = ''
                         // 扫码框得到焦点
                         this.$refs.footerRef.scanCodeFocus()
-                    } else if (this.pageType === 'checkout' && !b) {
-                        this.$nextTick(() => {
-                            this.$refs.asideRef.initPayAmount()
-                        })
                     }
                 } else {
                     this.$message({
@@ -343,6 +361,11 @@ export default {
             } else {
                 return ''
             }
+        },
+        // 折扣
+        discountPercent (price1, price2) {
+            if (!price1 || !price2) return '-'
+            return formatFloatRound((price1 - price2) / price1, 4) * 100 + '%'
         },
         // 点击行
         rowClick (row, column) {
@@ -468,10 +491,10 @@ export default {
     
         // 监听按键
         handleKeydown(event) {
-            if (event.key === 'Tab') {
+            if (!event.ctrlKey && event.key === 'Tab') {
                 event.preventDefault();
                 if (this.pageType === 'product') {
-                    if (event.target.id === 'temporary_price') return;
+                    if (this.$refs.footerRef.temporaryDialog) return;
                     this.$refs.footerRef.scanCodeFocus()
                 }
             } else if (!event.ctrlKey && event.key === 'F3') {  // 开钱箱
@@ -588,6 +611,10 @@ export default {
             } else if (!event.ctrlKey && event.altKey && event.key === 'f') {
                 if (this.pageType === 'checkout') {
                     this.$refs.asideRef.cellCheckOrder(102)
+                }
+            } else if (!event.ctrlKey && event.altKey && event.key === 's') {
+                if (this.pageType === 'checkout') {
+                    this.$refs.asideRef.cellCheckOrder(101)
                 }
             } else if (event.ctrlKey && event.key === '/') {
                 if (this.pageType === 'checkout') {

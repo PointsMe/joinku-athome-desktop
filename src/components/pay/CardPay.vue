@@ -46,8 +46,8 @@
 /**
  * payStatus 支付状态
  * InitiateRequested: 发起支付    Initiated: 已发起    Authorized: 已授权   SignatureVerificationRequired: 需要签名验证   签名验证通过: SignatureVerificationAccepted
- * Captured: 支付成功
- * Canceled: 已取消   SignatureVerificationRejected: 签名验证拒绝    Expired: 已过期     Declined: 已拒绝
+ * Captured: 支付成功  Captured
+ * Canceled: 已取消   CancelRequested: 取消支付    SignatureVerificationRejected: 签名验证拒绝    Expired: 已过期     Declined: 已拒绝
  */
 import {
     cancelPaySession,
@@ -97,7 +97,7 @@ export default {
             } else if (this.finalStatus === 101) {
                 return this.$t('paySuccess')
             } else if (this.finalStatus === 102) {
-                if (this.payStatus === 'Canceled') {
+                if (this.payStatus === 'Canceled' || this.payStatus === 'CancelRequested') {
                     return this.$t('payCancel')
                 } else if (this.payStatus === 'SignatureVerificationRejected' || this.payStatus === 'Declined') {
                     return this.$t('payReject')
@@ -168,17 +168,6 @@ export default {
                 }
                 if (!res || !res.status) return
                 this.payStatus = res.status
-                if (res.status === 'Captured') {
-                    this.finalStatus = 101
-                    if (this.timer) {
-                        clearInterval(this.timer)
-                        this.timer = null
-                    }
-                    setTimeout(() => {
-                        this.$emit('parent-update')
-                        this.dialogVisible = false
-                    }, 1000)
-                }
             }).catch(error => {
                 this.$message.error(error);
             }).finally(() => {

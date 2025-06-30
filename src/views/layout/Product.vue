@@ -4,17 +4,22 @@
             <div class="search">
                 <div class="search-item">
                     <el-cascader
+                        ref="inputRef0"
                         :placeholder="$t('productClassify')"
                         filterable
                         :options="classifyOptions"
                         v-model="search.classifyId"
                         :props="cascaderProps"
                         clearable
-                        @change="searchHandle">
+                        @change="searchHandle"
+                        @keydown.native="inputKeydown">
                     </el-cascader>
                 </div>
                 <div class="search-item">
                     <el-input
+                        ref="inputRef1"
+                        data-attr="searchInput"
+                        data-index="1"
                         v-model="search.name"
                         :placeholder="$t('productName')"
                         clearable
@@ -24,6 +29,9 @@
                 </div>
                 <div class="search-item">
                     <el-input
+                        ref="inputRef2"
+                        data-attr="searchInput"
+                        data-index="2"
                         v-model="search.code"
                         :placeholder="$t('productCode')"
                         clearable
@@ -33,7 +41,9 @@
                 </div>
                 <div class="search-item">
                     <el-input
-                        ref="barcode"
+                        ref="inputRef3"
+                        data-attr="searchInput"
+                        data-index="3"
                         v-model="search.barcode"
                         :placeholder="$t('productBarcode')"
                         clearable
@@ -373,6 +383,25 @@ export default {
                     return;
                 }
                 this.editDialog = true
+            } else if (!event.ctrlKey && event.key === 'Tab') {
+                if (event.target.dataset.attr !== 'searchInput' || !event.target.dataset.index) return;
+                event.preventDefault();
+                const index = Number(event.target.dataset.index)
+                // 前移
+                const prevRef = index <= 0 ? 'inputRef0' : `inputRef${index - 1}`
+                this.$refs[prevRef].$el.querySelector('input').focus();
+            } else if (event.ctrlKey && event.key === 'Tab') {
+                if (event.target.dataset.attr !== 'searchInput' || !event.target.dataset.index) return;
+                const index = Number(event.target.dataset.index)
+                // 后移
+                const nextRef = index >= 3 ? 'inputRef3' : `inputRef${index + 1}`
+                this.$refs[nextRef].$el.querySelector('input').focus();
+            }
+        },
+        inputKeydown (event) {
+            event.preventDefault();
+            if (event.ctrlKey && event.key === 'Tab') {
+                this.$refs['inputRef1'].$el.querySelector('input').focus();
             }
         },
         // 调整选中项
@@ -400,7 +429,7 @@ export default {
         this.getTableHeight()
         // 条码框得到焦点
         this.$nextTick(() => {
-            this.$refs.barcode.$el.querySelector('input').focus();
+            this.$refs.inputRef3.$el.querySelector('input').focus();
         })
         // 监听键盘事件
         window.addEventListener("keydown", this.handleKeydown);

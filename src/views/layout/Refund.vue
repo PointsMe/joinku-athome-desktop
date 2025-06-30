@@ -148,7 +148,7 @@
 </template>
 
 <script>
-import {queryCashierList, queryRefundList} from "@/api";
+import {queryCashierList, queryRefundPage} from "@/api";
 import moment from "moment";
 import {Debounce} from "@/utils/common";
 
@@ -278,9 +278,9 @@ export default {
                 startedAt: this.search.startedAt,
                 endedAt: this.search.endedAt,
                 page: this.currentPage,
-                rows: this.pageSize
+                size: this.pageSize
             }
-            queryRefundList(params).then(res => {
+            queryRefundPage(params).then(res => {
                 if (res.code === 20000) {
                     this.total = res.data.total
                     this.tableData = res.data.list || []

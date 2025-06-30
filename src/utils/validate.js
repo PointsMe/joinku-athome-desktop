@@ -43,12 +43,22 @@ export const validateAllFloat = (str) => {
 /**
  * 校验浮点数或0
  * @param
- * @returns {*}
+ * @returns {boolean}
  */
 export const validateZeroFloat = (str) => {
     const value = str.toString().replace(',', '.')
     const reg = /^(0|[1-9]\d*(\.\d+)?|0\.\d*[1-9]\d*)$/
     return reg.test(value)
+}
+
+/**
+ * 校验金额
+ * @param str
+ * @returns {boolean}
+ */
+export const validateAmount = (str) => {
+    const value = str.toString().replace(',', '.')
+    return /^\d+(\.\d+)?$/.test(value);
 }
 
 /**
