@@ -4,6 +4,7 @@
                :close-on-click-modal="false"
                @close="dialogClose"
                center
+               top="5vh"
                custom-class="medium-dialog">
         <div class="content">
             <el-form :model="formData" :rules="rules" label-position="top" ref="ruleForm" label-width="auto">
@@ -395,6 +396,9 @@ export default {
 
 <style lang="scss" scoped>
 .content{
+    max-height: 660px;
+    overflow-x: hidden;
+    overflow-y: auto;
     ::v-deep .el-form{
         .el-form-item{
             .el-form-item__label{

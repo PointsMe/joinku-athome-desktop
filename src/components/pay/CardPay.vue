@@ -85,6 +85,7 @@ export default {
             finalStatus: 100,   // 100: 支付中     101: 支付成功   102: 支付失败
             disabled: false,
             signatureUnderway: false,   // 签名中
+            signTimer: null
         };
     },
     // 计算属性
@@ -124,6 +125,7 @@ export default {
         // 初始化数据
         initData () {
             this.dialogVisible = true
+            this.payStatus = ''
             this.finalStatus = 100
             this.signatureUnderway = false
             this.startTimer()
@@ -157,13 +159,20 @@ export default {
     
         // 确认支付签名
         changePaySignState (b) {
+            if (this.disabled) return;
             if (this.finalStatus !== 100) return;
+            if (this.signTimer) {
+                clearTimeout(this.signTimer)
+                this.signTimer = null
+            }
             let params = {
                 accepted: b
             }
             this.disabled = true
             confirmPaySign(this.paySessionId, params).then(res => {
-                if (!b) {
+                if (b) {
+                    this.finalStatus = 101
+                } else {
                     this.finalStatus = 102
                 }
                 if (!res || !res.status) return
@@ -187,6 +196,7 @@ export default {
         },
         // 支付结果查询
         getPayResult () {
+            // 签名等待中
             if (this.signatureUnderway) return;
             queryPayResult(this.paySessionId).then(res => {
                 if (!res) return
@@ -216,7 +226,7 @@ export default {
                     this.finalStatus = 100
                     // 5秒后自动签名确认
                     this.signatureUnderway = true
-                    setTimeout(() => {
+                    this.signTimer = setTimeout(() => {
                         this.changePaySignState(true)
                     }, 5000)
                 } else {
@@ -246,6 +256,10 @@ export default {
                 clearInterval(this.timer)
                 this.timer = null
             }
+            if (this.signTimer) {
+                clearTimeout(this.signTimer)
+                this.signTimer = null
+            }
             this.$emit('parent-close')
         }
     },
@@ -258,10 +272,7 @@ export default {
     },
     // 销毁之前
     beforeDestroy() {
-        if (this.timer) {
-            clearInterval(this.timer)
-            this.timer = null
-        }
+    
     }
 };
 </script>

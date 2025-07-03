@@ -52,7 +52,7 @@ export default {
     },
     data() {
         let validatorAmount = (rule, value, callback) => {
-            if (!value) {
+            if (!value && value !== 0) {
                 return callback(new Error(this.$t('inpContentHint')));
             }
             if (!validateFloat(value)) {

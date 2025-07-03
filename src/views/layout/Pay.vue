@@ -365,7 +365,8 @@ export default {
         // 折扣
         discountPercent (price1, price2) {
             if (!price1 || !price2) return '-'
-            return formatFloatRound((price1 - price2) / price1, 4) * 100 + '%'
+            const value = formatFloatRound((price1 - price2) / price1, 4) * 100
+            return value > 0 ? `-${value}%` : `+${Math.abs(value)}%`
         },
         // 点击行
         rowClick (row, column) {

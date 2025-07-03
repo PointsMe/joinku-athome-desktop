@@ -63,13 +63,20 @@
                             <el-input
                                 v-model="cardAmount"
                                 ref="cardRef"
-                                :readonly="dojoPay"
-                                :clearable="!dojoPay"
+                                readonly
+                                v-if="dojoPay">
+                                <el-button slot="prepend" @click="cardPayHandle">{{ $t('swipingCard') }}</el-button>
+                            </el-input>
+                            <el-input
+                                v-model="cardAmount"
+                                ref="cardRef"
+                                clearable
                                 @input="cardInput"
                                 @focus="paymentFocus('card')"
-                                @keydown.native="(e) => paymentKeydown(e, 'card')">
-                                <el-button slot="prepend" @click="cardPayHandle">{{ $t('swipingCard') }}</el-button>
-                                <i class="iconfont icon-swiping-card" slot="append" @click="fullAmountCardPay" v-if="dojoPay"></i>
+                                @keydown.native="(e) => paymentKeydown(e, 'card')"
+                                v-else>
+                                <el-button slot="prepend">{{ $t('swipingCard') }}</el-button>
+                                <!--<i class="iconfont icon-swiping-card" slot="append" @click="fullAmountCardPay" v-if="dojoPay"></i>-->
                                 <!--<i class="el-icon-circle-close" slot="append" v-else></i>-->
                             </el-input>
                             <!--<a href="javascript:void(0)" class="icon">-->
@@ -1452,6 +1459,14 @@ export default {
             }
             let voucherAmount = countPropertyTotal(this.voucherList, 'amount')
             voucherAmount = formatCalculateFloat(voucherAmount)
+            if (voucherAmount > 0 && voucherAmount <= this.roundingAmount) {
+                this.$message({
+                    showClose: true,
+                    message: this.$t('vouDisable'),
+                    type: 'warning'
+                });
+                return
+            }
             if (voucherAmount >= this.finalAmount && formatFloatRound(voucherAmount - this.finalAmount) !== this.roundingAmount) {
                 this.$message({
                     showClose: true,
@@ -1517,6 +1532,7 @@ export default {
             } else {
                 this.posAmount = this.finalAmount
             }
+            if (this.posAmount <= 0) return;
             this.getTerminalStatus()
         },
         // 获取终端状态
@@ -1604,7 +1620,7 @@ export default {
             })
         },
         // 获取支付记录
-        getPaymentRecord () {
+        getPaymentRecord (b = false) {
             let params = {
                 type: 102
             }
@@ -1616,9 +1632,11 @@ export default {
                     } else {
                         this.cardAmount = ''
                     }
-                    this.$nextTick(() => {
-                        this.initPayAmount()
-                    })
+                    if (b) {
+                        this.$nextTick(() => {
+                            this.initPayAmount()
+                        })
+                    }
                 }
             }).catch(err => {
                 this.$message.error(err);
@@ -1644,7 +1662,7 @@ export default {
     mounted() {
         if (this.enabledDojo && !!this.posId) {
             // 获取支付记录
-            this.getPaymentRecord()
+            this.getPaymentRecord(true)
         } else {
             this.$nextTick(() => {
                 this.initPayAmount()
@@ -1786,11 +1804,11 @@ export default {
                             }
                         }
                         &.item-row{
-                            ::v-deep .el-input {
-                                .el-input__inner{
-                                    border-right: none;
-                                }
-                            }
+                            //::v-deep .el-input {
+                            //    .el-input__inner{
+                            //        border-right: none;
+                            //    }
+                            //}
                             .icon{
                                 width: 50px;
                                 height: 50px;

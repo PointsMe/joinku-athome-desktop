@@ -136,7 +136,7 @@ export default {
                 }
                 this.$emit('property-update', formatFloat(this.value))
             } else if (this.productHandleType === 105) {
-                if (!validateFloat(this.value) || formatFloat(this.value) > 100) {
+                if (!validateFloat(this.value) || formatFloat(this.value) >= 100) {
                     this.$message({
                         showClose: true,
                         message: this.$t('inpNotRule'),

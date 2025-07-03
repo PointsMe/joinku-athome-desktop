@@ -204,6 +204,12 @@
                             </div>
                         </template>
                     </el-table-column>
+                    <el-table-column
+                        prop="receiptNumber"
+                        align="center"
+                        min-width="140"
+                        :label="$t('invoiceNo') + ' / ' + $t('taxNo')">
+                    </el-table-column>
                     <el-table-column align="center" min-width="200" :label="$t('handle')" fixed="right">
                         <template slot-scope="scope">
                             <el-button

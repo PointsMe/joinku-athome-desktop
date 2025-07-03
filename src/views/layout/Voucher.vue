@@ -83,13 +83,17 @@
                 <el-table
                     :data="tableData"
                     border
+                    ref="treeTable"
                     :max-height="tableHeight"
+                    row-key="id"
+                    :tree-props="{children: 'childVouchers', hasChildren: 'hasChildren'}"
+                    @row-click="handleRowClick"
                     style="width: 100%;">
                     <el-table-column prop="id" min-width="180" align="center" label="ID"></el-table-column>
                     <el-table-column prop="amount" min-width="120" align="center" :label="$t('amount') + ' (€)'"></el-table-column>
                     <el-table-column prop="amount" min-width="180" align="center" :label="$t('createTime')">
                         <template slot-scope="scope">
-                            <span>{{ scope.row.createdAt | filterTime }}</span>
+                            <span v-if="scope.row.createdAt">{{ scope.row.createdAt | filterTime }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column min-width="180" align="center" :label="$t('refundNo')">
@@ -109,14 +113,20 @@
                         min-width="180"
                         :label="$t('useTime') + ' / ' + $t('ciNum')">
                         <template slot-scope="scope">
-                            <span v-if="scope.row.useCount === 1">{{ scope.row.updatedAt | filterTime }}</span>
-                            <span class="count" v-else-if="scope.row.useCount > 1">{{ scope.row.useCount }}</span>
+                            <p class="use-time" v-if="scope.row.state === 103">
+                                {{ scope.row.updatedAt | filterTime }}
+                                <span
+                                    class="count"
+                                    v-if="scope.row.parentId === '0' && scope.row.amount !== scope.row.finalAmount && scope.row.useCount > 0">
+                                    {{ scope.row.useCount }}
+                                </span>
+                            </p>
                             <span v-else>-</span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="state" width="140" align="center" :label="$t('useAmount')">
+                    <el-table-column prop="finalAmount" width="140" align="center" :label="$t('useAmount') + ' (€)'">
                         <template slot-scope="scope">
-                            <el-tag v-if="scope.row.state === 101">{{ $t('unused') }}</el-tag>
+                            <span v-if="scope.row.finalAmount">{{ scope.row.finalAmount }}</span>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -173,8 +183,6 @@ export default {
             currentPage: 1,
             total: 0,
             pageSize: 15,
-            itemId: '',
-            recordDialog: false,
         };
     },
     // 计算属性
@@ -246,6 +254,8 @@ export default {
         // 获取列表数据
         getListData () {
             let params = {
+                id: this.search.id,
+                state: this.search.state,
                 startedAt: this.search.startedAt,
                 endedAt: this.search.endedAt,
                 page: this.currentPage,
@@ -266,18 +276,19 @@ export default {
                 this.$message.error(error);
             })
         },
+    
+        // 点击行
+        handleRowClick (row) {
+            if (!this.$refs.treeTable) return;
+            // 切换展开状态
+            this.$refs.treeTable.toggleRowExpansion(row);
+        },
         
         // 点击分页
         handleCurrentChange (page) {
             this.currentPage = page
             // 获取列表数据
             this.getListData()
-        },
-    
-        // 使用记录
-        checkUseRecord (id) {
-            this.itemId = id
-            this.recordDialog = true
         },
         
         // 返回
@@ -379,10 +390,12 @@ export default {
         background-color: #fff;
         .table{
             height: calc(100% - 60px);
-            .count{
-                margin-left: 40px;
-                color: #56A3D9;
-                font-weight: 500;
+            .use-time{
+                .count{
+                    margin-left: 40px;
+                    color: #56A3D9;
+                    font-weight: 500;
+                }
             }
         }
         .pagination{
