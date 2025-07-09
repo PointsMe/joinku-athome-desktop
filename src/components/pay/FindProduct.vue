@@ -60,7 +60,7 @@
                         min-width="100"
                         :label="$t('stock')">
                     </el-table-column>
-                    <el-table-column
+                    <!-- <el-table-column
                         prop="discountable"
                         align="center"
                         min-width="140"
@@ -69,7 +69,7 @@
                             <span class="green" v-if="scope.row.discountable">{{ $t('yes') }}</span>
                             <span class="red" v-else>{{ $t('no') }}</span>
                         </template>
-                    </el-table-column>
+                    </el-table-column> -->
                     <el-table-column align="center" min-width="110" fixed="right" :label="$t('handle')">
                         <template slot-scope="scope">
                             <el-button

@@ -491,7 +491,7 @@ export const deleteOrder = (params) => {
     return http({
         url: '/api/v1/order/delete',
         method: 'post',
-        params
+        data: params
     })
 }
 

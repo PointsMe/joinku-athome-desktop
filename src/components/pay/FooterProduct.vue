@@ -6,7 +6,6 @@
                     ref="keywords"
                     v-model="keywords"
                     id="scan_barcode"
-                    @input.native="barcodeDebounce"
                     @keydown.native="keywordKeydown"
                     :placeholder="$t('productBarcode')"
                     clearable>
@@ -74,7 +73,7 @@ import {
     queryCodelessProduct, updateCartProductCount,
     updateCartProductPrice
 } from "@/api";
-import {Debounce, formatFloat, formatFloatRound} from "@/utils/common";
+import {formatFloat, formatFloatRound} from "@/utils/common";
 import {validateFloat, validateInteger} from "@/utils/validate";
 export default {
     name: "FooterProduct",
@@ -170,43 +169,6 @@ export default {
             })
         },
         
-        // 扫描条形码
-        barcodeDebounce: Debounce(function () {
-            if (!this.keywords || this.keywords.length < 6) {
-                return
-            }
-            let params = {
-                barcode: this.keywords
-            }
-            queryBarcodeProduct(params).then(res => {
-                if (Number(res.code) === 20000) {
-                    if (Array.isArray(res.data) && res.data.length === 1) {
-                        this.productUpdate(res.data[0]);
-                    } else if (Array.isArray(res.data) && res.data.length > 1) {
-                        this.barcodeList = res.data
-                        this.barcodeDialog = true
-                    } else {
-                        this.$message({
-                            showClose: true,
-                            message: this.$t('notFoundProduct'),
-                            type: 'error'
-                        })
-                    }
-                } else {
-                    this.$message({
-                        showClose: true,
-                        message: res.msg,
-                        type: 'error'
-                    })
-                }
-            }).catch(err => {
-                this.$message.error(err)
-            }).finally(() => {
-                this.keywords = ''
-                this.downCtrl = false
-            })
-        }, 100),
-        
         // 添加商品
         productUpdate (data) {
             let params = {
@@ -263,12 +225,49 @@ export default {
             this.$emit('open-cashbox')
         },
     
+        // 扫描条形码
+        getBarcodeProduct () {
+            if (!this.keywords) return;
+            let params = {
+                barcode: this.keywords
+            }
+            queryBarcodeProduct(params).then(res => {
+                if (Number(res.code) === 20000) {
+                    if (Array.isArray(res.data) && res.data.length === 1) {
+                        this.productUpdate(res.data[0]);
+                    } else if (Array.isArray(res.data) && res.data.length > 1) {
+                        this.barcodeList = res.data
+                        this.barcodeDialog = true
+                    } else {
+                        this.$message({
+                            showClose: true,
+                            message: this.$t('notFoundProduct'),
+                            type: 'error'
+                        })
+                    }
+                } else {
+                    this.$message({
+                        showClose: true,
+                        message: res.msg,
+                        type: 'error'
+                    })
+                }
+            }).catch(err => {
+                this.$message.error(err)
+            }).finally(() => {
+                this.keywords = ''
+                this.downCtrl = false
+            })
+        },
+
         // 监听关键字输入框按键按下
         keywordKeydown (event) {
             if (event.ctrlKey) {
                 this.downCtrl = true
             }
-            if (event.key === '+') {
+            if (event.key === 'Enter') {
+                this.getBarcodeProduct()
+            } else if (event.key === '+') {
                 let count = this.keywords
                 if (validateFloat(count)) {
                     event.preventDefault();

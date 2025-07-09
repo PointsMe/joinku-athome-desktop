@@ -100,6 +100,8 @@ export default {
                 this.maxAmount = 0
             }
             this.$nextTick(() => {
+                 // 重置表单
+                this.resetForm('ruleForm')
                 this.formData.amount = this.maxAmount
                 this.$refs.amountRef.$el.querySelector('input').focus();
             })
@@ -119,12 +121,11 @@ export default {
         },
         // 重置表单
         resetForm (formName) {
+            if (!this.$refs[formName]) return;
             this.$refs[formName].resetFields()
         },
         // 关闭弹窗
         dialogClose () {
-            // 重置表单
-            this.resetForm('ruleForm')
             this.$emit('parent-close')
         }
     },
