@@ -1505,7 +1505,6 @@ export default {
         // 刷卡支付
         cardPayHandle () {
             if (this.dojoPay) {
-                this.posAmount = this.roundingAmount
                 this.cardDialog = true
             } else {
                 this.amountType = 'card'
