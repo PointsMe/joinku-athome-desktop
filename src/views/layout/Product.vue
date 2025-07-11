@@ -370,9 +370,9 @@ export default {
         // 监听按键
         handleKeydown(event) {
             if (!event.ctrlKey && event.key === 'ArrowUp') {
-                this.toogleCheckedItem('up')
+                this.toggleCheckedItem('up')
             } else if (!event.ctrlKey && event.key === 'ArrowDown') {
-                this.toogleCheckedItem('down')
+                this.toggleCheckedItem('down')
             } else if (event.ctrlKey && event.key === 'F7') {
                 if (!this.itemId) {
                     this.$message({
@@ -405,7 +405,7 @@ export default {
             }
         },
         // 调整选中项
-        toogleCheckedItem (direction) {
+        toggleCheckedItem (direction) {
             if (direction === 'up') {
                 if (this.itemIndex === 0) return;
                 this.itemIndex--

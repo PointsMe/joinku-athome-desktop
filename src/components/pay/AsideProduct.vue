@@ -521,9 +521,9 @@ export default {
         },
     
         // 切换弹框选中行
-        toogleCheckedRow (direction) {
+        toggleCheckedRow (direction) {
             if (this.pendingDialog) {
-                this.$refs.pendingRef.toogleRow(direction)
+                this.$refs.pendingRef.toggleRow(direction)
             }
         },
         // 弹框选中项确定

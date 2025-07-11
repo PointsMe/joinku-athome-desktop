@@ -135,7 +135,7 @@ export default {
         },
     
         // 切换行
-        toogleRow (direction) {
+        toggleRow (direction) {
             const currentIndex = this.tableData.findIndex(item => item.sessionId === this.itemId)
             if (direction === 'up') {
                 if (currentIndex <= 0) return;

@@ -15,6 +15,7 @@
                     <el-input
                         v-model="formData.amount"
                         ref="amountRef"
+                        clearable
                         @keydown.enter.native="submitForm">
                         <template slot="append">€</template>
                     </el-input>

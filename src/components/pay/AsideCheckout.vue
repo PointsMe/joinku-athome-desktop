@@ -53,10 +53,10 @@
                                 ref="cashRef"
                                 @focus="paymentFocus('cash')"
                                 @input="cashInput"
+                                @dblclick.native="togglePaymentFocus('cash')"
                                 @keydown.native="(e) => paymentKeydown(e, 'cash')"
                                 clearable>
-                                <el-button slot="prepend" @click="cashPayHandle">{{ $t('cash') }}</el-button>
-                                <!--<i class="el-icon-circle-close" slot="append"></i>-->
+                                <el-button slot="prepend" @click="showAmountHandle('cash')">{{ $t('cash') }}</el-button>
                             </el-input>
                         </div>
                         <div class="item item-row">
@@ -64,6 +64,7 @@
                                 v-model="cardAmount"
                                 ref="cardRef"
                                 readonly
+                                @dblclick.native="togglePaymentFocus('card')"
                                 v-if="dojoPay">
                                 <el-button slot="prepend" @click="cardPayHandle">{{ $t('swipingCard') }}</el-button>
                             </el-input>
@@ -73,9 +74,10 @@
                                 clearable
                                 @input="cardInput"
                                 @focus="paymentFocus('card')"
+                                @dblclick.native="togglePaymentFocus('card')"
                                 @keydown.native="(e) => paymentKeydown(e, 'card')"
                                 v-else>
-                                <el-button slot="prepend">{{ $t('swipingCard') }}</el-button>
+                                <el-button slot="prepend" @click="showAmountHandle('card')">{{ $t('swipingCard') }}</el-button>
                                 <!--<i class="iconfont icon-swiping-card" slot="append" @click="fullAmountCardPay" v-if="dojoPay"></i>-->
                                 <!--<i class="el-icon-circle-close" slot="append" v-else></i>-->
                             </el-input>
@@ -89,6 +91,7 @@
                                 ref="bizumRef"
                                 @input="bizumInput"
                                 @focus="paymentFocus('bizum')"
+                                @dblclick.native="togglePaymentFocus('card')"
                                 @keydown.native="(e) => paymentKeydown(e, 'bizum')"
                                 clearable>
                                 <template slot="prepend">BIZUM</template>
@@ -1343,17 +1346,21 @@ export default {
         },
         
         // 调整支付焦点
-        tooglePaymentFocus (type) {
-            if (this.isFirstCash && this.isAuto) {
+        togglePaymentFocus (type) {
+            if (this.isFirstCash) {
                 this.cashAmount = ''
             }
-            this.isAuto = false
+            if (this.isFirstCard && !this.dojoPay) {
+                this.cardAmount = ''
+            }
+            if (this.isFirstBizum) {
+                this.bizumAmount = ''
+            }
             switch (type) {
                 case 'cash':
                     this.paymentType = type
                     this.$refs.cashRef.$el.querySelector('input').focus();
                     this.cashAmount = this.calcRemainAmount()
-                    this.isFirstCash = true
                     break;
                 case 'card':
                     if (this.dojoPay) {
@@ -1362,7 +1369,6 @@ export default {
                         this.paymentType = type
                         this.$refs.cardRef.$el.querySelector('input').focus();
                         this.cardAmount = this.calcRemainAmount()
-                        this.isFirstCard = true
                     }
                     break;
                 case 'bizum':
@@ -1370,7 +1376,6 @@ export default {
                     this.paymentType = type
                     this.$refs.bizumRef.$el.querySelector('input').focus();
                     this.bizumAmount = this.calcRemainAmount()
-                    this.isFirstBizum = true
                     break;
                 case 'ticket':
                     this.paymentType = type
@@ -1498,25 +1503,22 @@ export default {
             this.discountDialog = true
         },
         // 现金支付
-        cashPayHandle () {
-            this.amountType = 'cash'
+        showAmountHandle (type) {
+            this.amountType = type
             this.amountDialog = true
         },
         // 刷卡支付
         cardPayHandle () {
-            if (this.dojoPay) {
-                this.cardDialog = true
-            } else {
-                this.amountType = 'card'
-                this.amountDialog = true
-            }
+            this.cardDialog = true
         },
         // 更新金额
         amountCalculateUpdate (amount) {
             if (this.amountType === 'cash') {
                 this.cashAmount = formatUseDot(amount)
+                this.isFirstCash = false;
             } else if (this.amountType === 'card') {
                 this.cardAmount = formatUseDot(amount)
+                this.isFirstCard = false;
             }
         },
         // 部分刷卡支付

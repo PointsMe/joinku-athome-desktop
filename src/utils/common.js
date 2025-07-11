@@ -77,8 +77,8 @@ export const formatUseDot = (val, n = 2) => {
  */
 export const formatFloatFloor = (val, n = 2) => {
     if (val) {
-        const num = Number(val.toString().replace(',', '.'))
-        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_DOWN).toNumber();
+        const num = val.toString().replace(',', '.')
+        return new Decimal(num).toDecimalPlaces(n, Decimal.ROUND_HALF_UP).toNumber();
     } else {
         return 0
     }

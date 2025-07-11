@@ -390,15 +390,15 @@ export default {
             })
         },
         // 切换弹框选中行
-        toogleCheckedRow (direction) {
+        toggleCheckedRow (direction) {
             if (this.productDialog) {
-                this.$refs.productRef.toogleRow(direction)
+                this.$refs.productRef.toggleRow(direction)
             }
             if (this.barcodeDialog) {
-                this.$refs.barcodeRef.toogleRow(direction)
+                this.$refs.barcodeRef.toggleRow(direction)
             }
             if (this.codelessDialog) {
-                this.$refs.codelessRef.toogleRow(direction)
+                this.$refs.codelessRef.toggleRow(direction)
             }
         },
         // 弹框选中项确定

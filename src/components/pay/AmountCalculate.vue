@@ -21,6 +21,7 @@
                         <el-input
                             v-model="formData.amount"
                             ref="amountRef"
+                            clearable
                             @keydown.enter.native="submitForm">
                             <template slot="append">€</template>
                         </el-input>
@@ -46,7 +47,7 @@
 <script>
 
 import {validateFloat} from "@/utils/validate";
-import {countPropertyTotal, formatFloat, formatFloatFloor, formatUseDot} from "@/utils/common";
+import {countPropertyTotal, formatFloatFloor, formatFloatRound, formatUseDot} from "@/utils/common";
 
 export default {
     name: "AmountCalculate",
@@ -131,8 +132,8 @@ export default {
         submitForm () {
             this.$refs['ruleForm'].validate((valid) => {
                 if (valid) {
-                    const amount = formatFloat(this.formData.amount)
-                    const label = `€${formatUseDot(this.formData.amount)}`
+                    const amount = formatFloatFloor(this.formData.amount)
+                    const label = `€${formatUseDot(amount)}`
                     if (this.amountType === 'cash') {
                         this.cashAmounts.push({
                             label,
@@ -160,8 +161,23 @@ export default {
         },
         // 确定
         confirmHandle () {
+            if (validateFloat(this.formData.amount)) {
+                const amount = formatFloatFloor(this.formData.amount)
+                const label = `€${formatUseDot(amount)}`
+                if (this.amountType === 'cash') {
+                    this.cashAmounts.push({
+                        label,
+                        value: amount
+                    })
+                } else if (this.amountType === 'card') {
+                    this.cardAmounts.push({
+                        label,
+                        value: amount
+                    })
+                }
+            }
             const totalAmount = countPropertyTotal(this.amountList, 'value')
-            this.$emit('parent-update', formatFloatFloor(totalAmount))
+            this.$emit('parent-update', formatFloatRound(totalAmount))
             this.dialogVisible = false
         },
         // 重置表单

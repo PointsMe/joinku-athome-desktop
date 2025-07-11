@@ -411,11 +411,11 @@ export default {
         // 切换页面类型
         togglePage (type) {
             this.pageType = type
-            this.toogleLayoutAside()
+            this.toggleLayoutAside()
         },
         
         // 切换布局侧边栏
-        toogleLayoutAside () {
+        toggleLayoutAside () {
             if (this.pageType === 'checkout') {
                 this.saveLayoutAside(false)
             } else {
@@ -503,24 +503,24 @@ export default {
             } else if (!event.ctrlKey && event.key === 'ArrowUp') {
                 event.preventDefault();
                 if (this.pageType === 'product') {
-                    this.toogleCheckedProduct('up')
+                    this.toggleCheckedProduct('up')
                 }
             } else if (!event.ctrlKey && event.key === 'ArrowDown') {
                 event.preventDefault();
                 if (this.pageType === 'product') {
-                    this.toogleCheckedProduct('down')
+                    this.toggleCheckedProduct('down')
                 }
             } else if (event.ctrlKey && event.key === 'ArrowUp') {
                 event.preventDefault();
-                this.$refs.footerRef.toogleCheckedRow('up')
+                this.$refs.footerRef.toggleCheckedRow('up')
                 if (this.pageType === 'product') {
-                    this.$refs.asideRef.toogleCheckedRow('up')
+                    this.$refs.asideRef.toggleCheckedRow('up')
                 }
             } else if (event.ctrlKey && event.key === 'ArrowDown') {
                 event.preventDefault();
-                this.$refs.footerRef.toogleCheckedRow('down')
+                this.$refs.footerRef.toggleCheckedRow('down')
                 if (this.pageType === 'product') {
-                    this.$refs.asideRef.toogleCheckedRow('down')
+                    this.$refs.asideRef.toggleCheckedRow('down')
                 }
             } else if (event.ctrlKey && event.key === 'g') {
                 if (this.pageType === 'product') {
@@ -625,25 +625,33 @@ export default {
                 event.preventDefault();
             } else if (!event.ctrlKey && event.key === 'F9') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.tooglePaymentFocus('cash')
+                    this.$refs.asideRef.togglePaymentFocus('cash')
+                }
+            } else if (event.ctrlKey && event.key === 'F9') {
+                if (this.pageType === 'checkout') {
+                    this.$refs.asideRef.showAmountHandle('cash')
                 }
             } else if (!event.ctrlKey && event.key === 'F10') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.tooglePaymentFocus('card')
+                    this.$refs.asideRef.togglePaymentFocus('card')
+                }
+            } else if (event.ctrlKey && event.key === 'F10') {
+                if (this.pageType === 'checkout') {
+                    this.$refs.asideRef.showAmountHandle('card')
                 }
             } else if (!event.ctrlKey && event.key === 'F11') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.tooglePaymentFocus('bizum')
+                    this.$refs.asideRef.togglePaymentFocus('bizum')
                 }
             } else if (!event.ctrlKey && event.key === 'F12') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.tooglePaymentFocus('voucher')
+                    this.$refs.asideRef.togglePaymentFocus('voucher')
                 }
             }
         },
         
         // 调整选中商品
-        toogleCheckedProduct (direction) {
+        toggleCheckedProduct (direction) {
             if (direction === 'up') {
                 if (this.itemIndex === 0) return;
                 this.itemIndex--
@@ -685,7 +693,7 @@ export default {
     },
     // 创建完成
     created() {
-        this.toogleLayoutAside()
+        this.toggleLayoutAside()
     },
     // 挂载完成
     mounted() {

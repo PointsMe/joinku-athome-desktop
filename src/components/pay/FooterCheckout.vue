@@ -258,9 +258,9 @@ export default {
             this.memberDialog = true
         },
         // 切换弹框选中行
-        toogleCheckedRow (direction) {
+        toggleCheckedRow (direction) {
             if (this.memberDialog) {
-                this.$refs.memberRef.toogleRow(direction)
+                this.$refs.memberRef.toggleRow(direction)
             }
         },
         // 弹框选中项确定
