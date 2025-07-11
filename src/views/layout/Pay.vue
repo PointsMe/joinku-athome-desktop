@@ -637,7 +637,7 @@ export default {
                 }
             } else if (event.ctrlKey && event.key === 'F10') {
                 if (this.pageType === 'checkout') {
-                    this.$refs.asideRef.showAmountHandle('card')
+                    this.$refs.asideRef.cardPayHandle()
                 }
             } else if (!event.ctrlKey && event.key === 'F11') {
                 if (this.pageType === 'checkout') {

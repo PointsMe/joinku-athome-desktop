@@ -64,7 +64,7 @@
                                 v-model="cardAmount"
                                 ref="cardRef"
                                 readonly
-                                @dblclick.native="togglePaymentFocus('card')"
+                                @dblclick.native="cardPayHandle"
                                 v-if="dojoPay">
                                 <el-button slot="prepend" @click="cardPayHandle">{{ $t('swipingCard') }}</el-button>
                             </el-input>
@@ -1364,7 +1364,7 @@ export default {
                     break;
                 case 'card':
                     if (this.dojoPay) {
-                        this.cardPayHandle()
+                        this.cardDialog = true
                     } else {
                         this.paymentType = type
                         this.$refs.cardRef.$el.querySelector('input').focus();
@@ -1509,7 +1509,12 @@ export default {
         },
         // 刷卡支付
         cardPayHandle () {
-            this.cardDialog = true
+            if (this.dojoPay) {
+                this.cardDialog = true
+            } else {
+                this.amountType = 'card'
+                this.amountDialog = true
+            }
         },
         // 更新金额
         amountCalculateUpdate (amount) {
@@ -1517,8 +1522,12 @@ export default {
                 this.cashAmount = formatUseDot(amount)
                 this.isFirstCash = false;
             } else if (this.amountType === 'card') {
-                this.cardAmount = formatUseDot(amount)
-                this.isFirstCard = false;
+                if (this.dojoPay) {
+                    this.partAmountCardPay(amount)
+                } else {
+                    this.cardAmount = formatUseDot(amount)
+                    this.isFirstCard = false;
+                }
             }
         },
         // 部分刷卡支付
